@@ -1,8 +1,17 @@
 <script lang="ts">
+    import { quizConfig, quizSession } from "$lib/stores";
     import { isCorrectAnswer } from "$lib/logic/quizEngine";
-    import { getCodePath } from "$lib/db";
     import { onMount } from "svelte";
-    import { Trophy, ChevronDown, ChevronUp } from "lucide-svelte";
+    import { getCodePath } from "$lib/db";
+    import {
+        ChevronRight,
+        PlayCircle,
+        ChevronDown,
+        ChevronUp,
+        Trophy,
+    } from "lucide-svelte";
+    import { examDataService } from "$lib/services/examService";
+    import { goto } from "$app/navigation";
     import { quizHistory, questionMemos } from "$lib/stores";
     import type { QuizRecord } from "$lib/types";
 
@@ -13,6 +22,13 @@
 
     onMount(() => {
         loadSubjectPaths();
+        // Automatically expand wrong answers
+        record.questions.forEach((q, i) => {
+            if (!isCorrectAnswer(q, record.answers[i])) {
+                expandedQuestions.add(i);
+            }
+        });
+        expandedQuestions = expandedQuestions;
     });
 
     async function loadSubjectPaths() {
@@ -77,6 +93,86 @@
     ).length;
     $: wrongCount = record.total - correctCount;
     $: percentage = Math.round((correctCount / record.total) * 100);
+
+    // Summary of subjects missed
+    $: wrongSubjects = (() => {
+        const subjectsFound = new Map<string, string>(); // code -> name
+        record.questions.forEach((q, i) => {
+            if (!isCorrectAnswer(q, record.answers[i])) {
+                q.subjects.forEach((code) => {
+                    if (subjectPaths[code]) {
+                        subjectsFound.set(code, subjectPaths[code]);
+                    }
+                });
+            }
+        });
+        // Sort by code for consistent taxonomy order
+        return Array.from(subjectsFound.entries())
+            .map(([code, name]) => ({ code, name }))
+            .sort((a, b) => a.code.localeCompare(b.code));
+    })();
+
+    async function startRecoveryQuiz(subj: { code: string; name: string }) {
+        if (
+            !confirm(
+                `${subj.name} 파트 문제를 10문제 출제한 시험지를 준비하면서 해당 파트를 풀어보시겠습니까?`,
+            )
+        ) {
+            return;
+        }
+
+        try {
+            await examDataService.init();
+            const allQuestions = examDataService.getAllQuestions();
+
+            // Filter questions by subject code
+            const relatedQuestions = allQuestions.filter((q) =>
+                q.subjects.some(
+                    (code) =>
+                        code === subj.code || code.startsWith(subj.code + "."),
+                ),
+            );
+
+            if (relatedQuestions.length === 0) {
+                alert("해당 파트의 문제를 찾을 수 없습니다.");
+                return;
+            }
+
+            // Shuffle and pick 10
+            const shuffled = [...relatedQuestions].sort(
+                () => 0.5 - Math.random(),
+            );
+            const selected = shuffled.slice(0, 10).map((q) => {
+                const options = q.options.map((text, i) => ({
+                    text,
+                    originalIndex: i + 1,
+                }));
+                const shuffledOptions = options.sort(() => 0.5 - Math.random());
+                return {
+                    ...q,
+                    displayOptions: shuffledOptions,
+                };
+            });
+
+            // Set session
+            $quizSession = {
+                questions: selected,
+                config: {
+                    category: "RECOVERY_QUIZ",
+                    round: subj.name,
+                    questionCount: selected.length,
+                    prioritizeUnseen: false,
+                    shuffleOptions: true,
+                },
+                startTime: Date.now(),
+            };
+
+            goto("/quiz");
+        } catch (e) {
+            console.error(e);
+            alert("연습 문제를 생성하는 중 오류가 발생했습니다.");
+        }
+    }
 </script>
 
 <!-- Report Card (Neo-Retro) -->
@@ -146,6 +242,52 @@
     </div>
 </div>
 
+<!-- Summary Message for Wrong Parts -->
+{#if wrongSubjects.length > 0}
+    <div
+        class="retro-window w-full bg-[#FFF0F0] mb-6 border-2 border-[#FF6666] p-4"
+    >
+        <div class="flex items-start gap-3">
+            <div class="text-2xl">⚠️</div>
+            <div class="space-y-1">
+                <p class="font-pixel text-[#FF6666] text-sm">
+                    ATTENTION: WEAKNESS DETECTED
+                </p>
+                <p
+                    class="text-[10px] font-bold text-gray-500 mb-3 border-b border-gray-200 pb-1"
+                >
+                    취약 파트 분석 리포트
+                </p>
+                <div class="space-y-2">
+                    {#each wrongSubjects as subj}
+                        <button
+                            class="w-full flex items-center justify-between p-2 rounded bg-white hover:bg-[#FFF5F5] border border-gray-200 hover:border-[#FF6666] transition-all group text-left"
+                            on:click={() => startRecoveryQuiz(subj)}
+                        >
+                            <div class="flex items-center gap-2">
+                                <span
+                                    class="text-[8px] px-1 bg-gray-100 text-gray-500 rounded font-mono"
+                                >
+                                    {subj.code}
+                                </span>
+                                <span class="text-xs font-bold text-gray-700">
+                                    {subj.name}
+                                </span>
+                            </div>
+                            <div
+                                class="flex items-center gap-1 text-[10px] font-bold text-[#FF6666] opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                                <span>연습하기</span>
+                                <PlayCircle size={14} />
+                            </div>
+                        </button>
+                    {/each}
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}
+
 <!-- Details -->
 <section class="space-y-4">
     <div class="flex items-center gap-2 mb-2">
@@ -191,7 +333,7 @@
                         class="p-4 bg-gray-50 border-t-2 border-black text-sm space-y-4 shadow-inner"
                     >
                         <!-- Source Info -->
-                        {#if sourceTitle || sourceYear}
+                        {#if sourceTitle || sourceYear || question.subject_category}
                             <div
                                 class="text-[10px] font-bold text-gray-400 flex items-center gap-2"
                             >
@@ -201,6 +343,14 @@
                                     {sourceTitle || "출처 불명"}
                                     {#if question.id}#{question.id}{/if}
                                 </span>
+                                {#if question.subject_category || question.examInfo?.category}
+                                    <span
+                                        class="pixel-tag bg-[#E0F7FA] text-[#006064] ml-1"
+                                    >
+                                        {question.subject_category ||
+                                            question.examInfo?.category}
+                                    </span>
+                                {/if}
                             </div>
                         {/if}
 

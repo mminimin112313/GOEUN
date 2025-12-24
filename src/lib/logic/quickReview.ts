@@ -61,7 +61,8 @@ export function getQuickReviewQuestions(
     // Subject filter (공법/민사법/형사법)
     if (options?.subjectFilter && options.subjectFilter !== 'all') {
         filtered = filtered.filter(n =>
-            n.examInfo?.category === options.subjectFilter
+            n.examInfo?.category === options.subjectFilter ||
+            n.subject === options.subjectFilter
         );
     }
 

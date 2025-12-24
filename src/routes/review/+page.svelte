@@ -6,9 +6,11 @@
         questionMemos,
     } from "$lib/stores";
     import { isCorrectAnswer } from "$lib/logic/quizEngine";
-    import { getCodePath } from "$lib/db";
+    import { getCodePath, loadMasterCodes } from "$lib/db";
+    import { getFlatTaxonomyForCategory } from "$lib/db/taxonomy";
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
+    import { slide } from "svelte/transition";
     import {
         Trash2,
         CheckCircle2,
@@ -19,9 +21,16 @@
         Award,
         Zap,
         Filter,
+        X,
+        Sliders,
+        CheckSquare,
+        Square,
+        Search,
     } from "lucide-svelte";
     import type { WrongNote } from "$lib/types";
     import { getQuickReviewQuestions } from "$lib/logic/quickReview";
+    import TaxonomyBreadcrumb from "$lib/components/TaxonomyBreadcrumb.svelte";
+    import type { FlatTaxonomyNode } from "$lib/db/taxonomy";
 
     let subjectPaths: Record<string, string> = {};
     let expandedQuestions: Set<number> = new Set();
@@ -29,12 +38,52 @@
 
     // New filters
     let subjectFilter: string = "all"; // 'all' | '공법' | '민사법' | '형사법'
+    let sourceFilter: string = "all"; // 'all' | specific exam name
+    let codeFilter: string = "all"; // 'all' | taxonomy code
+    let codeName: string = ""; // Display name for the code filter
     const subjects = ["공법", "민사법", "형사법"];
 
-    onMount(() => {
+    // Taxonomy Tree State
+    let taxonomyNodes: FlatTaxonomyNode[] = [];
+    let loadingTaxonomy = false;
+    let showAdvanced = false;
+    let taxonomyCounts: Record<string, number> = {};
+
+    onMount(async () => {
         migrateExistingNotes();
         loadSubjectPaths();
+        loadTaxonomyTree();
     });
+
+    async function loadTaxonomyTree() {
+        loadingTaxonomy = true;
+        try {
+            // Load for all subjects in the category
+            // Our app has MIXED or specific subjects. Let's just load everything for now
+            // or based on current wrong notes' subjects.
+            const uniqueSubjects = [
+                ...new Set(
+                    allWrongNotesFromLogs.map((n) => n.subject).filter(Boolean),
+                ),
+            ];
+            let allNodes: FlatTaxonomyNode[] = [];
+            for (const subj of uniqueSubjects) {
+                const nodes = await getFlatTaxonomyForCategory(subj);
+                allNodes = [...allNodes, ...nodes];
+            }
+            // Remove duplicates if any
+            const seenCodes = new Set();
+            taxonomyNodes = allNodes.filter((n) => {
+                if (seenCodes.has(n.code)) return false;
+                seenCodes.add(n.code);
+                return true;
+            });
+        } catch (e) {
+            console.error("Failed to load taxonomy", e);
+        } finally {
+            loadingTaxonomy = false;
+        }
+    }
 
     /**
      * One-time migration: Move standalone wrongNotes data to centralization
@@ -168,15 +217,62 @@
         return Array.from(notesMap.values());
     })();
 
-    // Enhanced filtering with subject filter
+    /**
+     * Update taxonomy counts based on the current pool of wrong notes (ignoring code filter)
+     */
+    $: {
+        const counts: Record<string, number> = {};
+        allWrongNotesFromLogs
+            .filter((n) =>
+                filter === "active" ? !n.isGraduated : n.isGraduated,
+            )
+            .filter((n) => {
+                const matchSubject =
+                    subjectFilter === "all" ||
+                    n.examInfo?.category === subjectFilter ||
+                    n.subject === subjectFilter;
+
+                const examName =
+                    n.examInfo?.examName || n.exam_name || n.examInfo?.round;
+                const matchSource =
+                    sourceFilter === "all" || examName === sourceFilter;
+
+                return matchSubject && matchSource;
+            })
+            .forEach((n) => {
+                n.subjects.forEach((code) => {
+                    // Count for this code and all its parents
+                    const parts = code.split("_");
+                    for (let i = 1; i <= parts.length; i++) {
+                        const ancestor = parts.slice(0, i).join("_");
+                        counts[ancestor] = (counts[ancestor] || 0) + 1;
+                    }
+                });
+            });
+        taxonomyCounts = counts;
+    }
+
+    // Enhanced filtering with subject, source, and code filter
     $: filteredNotes = allWrongNotesFromLogs
         .filter((n) => (filter === "active" ? !n.isGraduated : n.isGraduated))
         .filter((n) => {
-            if (subjectFilter === "all") return true;
-            return (
+            const matchSubject =
+                subjectFilter === "all" ||
                 n.examInfo?.category === subjectFilter ||
-                n.subject === subjectFilter
-            );
+                n.subject === subjectFilter;
+
+            const examName =
+                n.examInfo?.examName || n.exam_name || n.examInfo?.round;
+            const matchSource =
+                sourceFilter === "all" || examName === sourceFilter;
+
+            const matchCode =
+                codeFilter === "all" ||
+                n.subjects.some(
+                    (c) => c === codeFilter || c.startsWith(codeFilter + "_"),
+                );
+
+            return matchSubject && matchSource && matchCode;
         })
         .sort((a, b) => {
             if (sortMode === "oldest_review") {
@@ -194,8 +290,63 @@
     ).length;
 
     // Dynamic header based on filter
-    $: headerTitle =
-        subjectFilter === "all" ? "오답노트" : `오답노트 - ${subjectFilter}`;
+    $: headerTitle = (() => {
+        let title = "오답노트";
+        if (codeFilter !== "all") {
+            title = codeName || "분류 필터";
+        } else if (subjectFilter !== "all" && sourceFilter !== "all") {
+            title = `${subjectFilter} - ${sourceFilter}`;
+        } else if (subjectFilter !== "all") {
+            title = `오답노트 - ${subjectFilter}`;
+        } else if (sourceFilter !== "all") {
+            title = `오답노트 - ${sourceFilter}`;
+        }
+        return title;
+    })();
+
+    function toggleSubject(subj: string) {
+        if (subjectFilter === subj) {
+            subjectFilter = "all";
+        } else {
+            subjectFilter = subj;
+        }
+    }
+
+    function toggleSource(src: string) {
+        if (sourceFilter === src) {
+            sourceFilter = "all";
+        } else {
+            sourceFilter = src;
+        }
+    }
+
+    function toggleCode(code: string, name: string) {
+        if (codeFilter === code) {
+            codeFilter = "all";
+            codeName = "";
+        } else {
+            codeFilter = code;
+            codeName = name;
+        }
+    }
+
+    function handleBreadcrumbSelect(
+        event: CustomEvent<{ name: string; code: string }>,
+    ) {
+        const { name, code } = event.detail;
+        // Search for the specific segment's code if possible, but for now let's use the full code or name
+        // Ideally we want to find the code that corresponds to the segment name.
+        // Let's look through taxonomyNodes to find a match for name within the path of 'code'
+        const targetNode = taxonomyNodes.find(
+            (n) => n.name === name && code.startsWith(n.code),
+        );
+        if (targetNode) {
+            toggleCode(targetNode.code, targetNode.name);
+        } else {
+            // Fallback: toggle the whole code if segment not uniquely found
+            toggleCode(code, name);
+        }
+    }
 
     // Get unique exam names for display
     $: examNames = [
@@ -275,12 +426,19 @@
     <div class="flex gap-2 overflow-x-auto pb-2">
         <button
             class="shrink-0 btn-retro text-xs px-4 py-2 flex items-center gap-1
-                   {subjectFilter === 'all'
+                   {subjectFilter === 'all' &&
+            sourceFilter === 'all' &&
+            codeFilter === 'all'
                 ? 'bg-[#333] text-white'
                 : 'bg-white text-gray-600'}"
-            on:click={() => (subjectFilter = "all")}
+            on:click={() => {
+                subjectFilter = "all";
+                sourceFilter = "all";
+                codeFilter = "all";
+                codeName = "";
+            }}
         >
-            <Filter size={12} /> 전체
+            <Filter size={12} /> 전체 초기화
         </button>
         {#each subjects as subj}
             <button
@@ -288,12 +446,150 @@
                        {subjectFilter === subj
                     ? 'bg-[#FF6666] text-white'
                     : 'bg-white text-gray-600'}"
-                on:click={() => (subjectFilter = subj)}
+                on:click={() => toggleSubject(subj)}
             >
                 {subj}
             </button>
         {/each}
     </div>
+
+    <!-- Active Filter Chips -->
+    {#if subjectFilter !== "all" || sourceFilter !== "all" || codeFilter !== "all"}
+        <div class="flex flex-wrap gap-2 px-1">
+            {#if subjectFilter !== "all"}
+                <div
+                    class="flex items-center gap-1 bg-[#FF6666] text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm"
+                >
+                    {subjectFilter}
+                    <button
+                        on:click={() => (subjectFilter = "all")}
+                        class="hover:text-black"
+                    >
+                        <X size={10} />
+                    </button>
+                </div>
+            {/if}
+            {#if sourceFilter !== "all"}
+                <div
+                    class="flex items-center gap-1 bg-gray-600 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm"
+                >
+                    {sourceFilter}
+                    <button
+                        on:click={() => (sourceFilter = "all")}
+                        class="hover:text-black"
+                    >
+                        <X size={10} />
+                    </button>
+                </div>
+            {/if}
+            {#if codeFilter !== "all"}
+                <div
+                    class="flex items-center gap-1 bg-[#FF66CC] text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm"
+                >
+                    {codeName}
+                    <button
+                        on:click={() => {
+                            codeFilter = "all";
+                            codeName = "";
+                        }}
+                        class="hover:text-black"
+                    >
+                        <X size={10} />
+                    </button>
+                </div>
+            {/if}
+        </div>
+    {/if}
+
+    <!-- Advanced Filter (Accordion) -->
+    <section class="retro-window">
+        <button
+            class="w-full retro-header !bg-[#333] !text-white !border-b-0 hover:bg-[#444] transition-colors flex justify-between items-center px-4 py-2"
+            on:click={() => {
+                showAdvanced = !showAdvanced;
+            }}
+        >
+            <div class="flex items-center gap-2">
+                <Sliders size={14} class="text-[#99FF99]" />
+                <span class="tracking-wide text-[10px]"
+                    >상세 분류 필터 (Taxonomy)</span
+                >
+            </div>
+            <ChevronDown
+                size={14}
+                class="transition-transform {showAdvanced ? 'rotate-180' : ''}"
+            />
+        </button>
+
+        {#if showAdvanced}
+            <div
+                transition:slide
+                class="p-3 bg-white border-t-2 border-black max-h-[300px] overflow-y-auto custom-scrollbar"
+            >
+                {#if loadingTaxonomy}
+                    <div
+                        class="text-center py-4 text-[10px] font-bold text-gray-400 animate-pulse"
+                    >
+                        LOADING STRUCTURE...
+                    </div>
+                {:else if taxonomyNodes.length === 0}
+                    <div
+                        class="text-center py-4 text-[10px] font-bold text-gray-400"
+                    >
+                        데이터가 없습니다.
+                    </div>
+                {:else}
+                    <div class="space-y-px">
+                        {#each taxonomyNodes as node}
+                            {@const count = taxonomyCounts[node.code] || 0}
+                            {#if count > 0}
+                                <button
+                                    class="w-full text-left flex items-center gap-2 pr-2 py-1 hover:bg-[#FFF0F5] transition-colors group relative border-l-2 border-transparent hover:border-[#FF66CC]
+                                           {codeFilter === node.code
+                                        ? 'bg-[#FFF0F5] border-l-[#FF66CC]'
+                                        : ''}"
+                                    style="padding-left: {(node.depth - 1) *
+                                        15 +
+                                        8}px"
+                                    on:click={() =>
+                                        toggleCode(node.code, node.name)}
+                                >
+                                    <div class="relative">
+                                        {#if codeFilter === node.code}
+                                            <div
+                                                class="bg-[#FF66CC] text-white p-0.5 border border-black"
+                                            >
+                                                <CheckSquare size={10} />
+                                            </div>
+                                        {:else}
+                                            <div
+                                                class="bg-white text-gray-300 p-0.5 border border-gray-300 group-hover:border-[#FF66CC]"
+                                            >
+                                                <Square size={10} />
+                                            </div>
+                                        {/if}
+                                    </div>
+
+                                    <span
+                                        class="text-[11px] font-bold truncate flex-1 {node.depth ===
+                                        1
+                                            ? 'text-black'
+                                            : 'text-gray-600'}"
+                                    >
+                                        {node.name}
+                                        <span
+                                            class="text-[9px] text-gray-400 font-mono ml-1 font-normal"
+                                            >({count})</span
+                                        >
+                                    </span>
+                                </button>
+                            {/if}
+                        {/each}
+                    </div>
+                {/if}
+            </div>
+        {/if}
+    </section>
 
     <!-- Toolbar: Sort & Filter -->
     <div class="flex flex-col gap-2">
@@ -360,7 +656,34 @@
                                 {note.question}
                             </p>
                             <div class="flex flex-wrap gap-2 mt-1">
-                                <span class="pixel-tag bg-gray-100 text-[9px]">
+                                <button
+                                    class="pixel-tag bg-[#E0F7FA] text-[#006064] text-[9px] font-bold border-none hover:brightness-95 cursor-pointer text-left"
+                                    on:click|stopPropagation={() =>
+                                        toggleSubject(
+                                            note.examInfo?.category ||
+                                                note.subject_category ||
+                                                note.subject ||
+                                                "미분류",
+                                        )}
+                                >
+                                    {note.examInfo?.category ||
+                                        note.subject_category ||
+                                        note.subject ||
+                                        "미분류"}
+                                </button>
+                                <button
+                                    class="pixel-tag bg-gray-100 text-[9px] border-none hover:brightness-95 cursor-pointer text-left {sourceFilter !==
+                                    'all'
+                                        ? 'ring-1 ring-black shadow-inner'
+                                        : ''}"
+                                    on:click|stopPropagation={() =>
+                                        toggleSource(
+                                            note.examInfo?.examName ||
+                                                note.exam_name ||
+                                                note.examInfo?.round ||
+                                                "Unknown",
+                                        )}
+                                >
                                     {#if note.examInfo?.examName}
                                         {note.examInfo.examName}
                                         {note.examInfo.examYear
@@ -372,7 +695,7 @@
                                     {:else}
                                         {note.examInfo?.round || "Unknown"}
                                     {/if}
-                                </span>
+                                </button>
                                 <span
                                     class="pixel-tag bg-blue-50 text-blue-600 text-[9px]"
                                 >
@@ -386,11 +709,22 @@
                                     </span>
                                 {/if}
                             </div>
+
+                            <!-- breadcrumb moved here -->
+                            <div class="mt-2" on:click|stopPropagation>
+                                <TaxonomyBreadcrumb
+                                    codes={note.subjects}
+                                    on:select={handleBreadcrumbSelect}
+                                />
+                            </div>
                         </div>
                     </div>
 
                     {#if isExpanded}
-                        <div class="p-4 bg-[#FAFAFA] text-xs space-y-3">
+                        <div
+                            class="p-4 bg-[#FAFAFA] text-xs space-y-3"
+                            transition:slide
+                        >
                             <div
                                 class="font-medium text-gray-800 leading-relaxed whitespace-pre-wrap"
                             >

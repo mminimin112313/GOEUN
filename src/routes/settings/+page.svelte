@@ -21,8 +21,12 @@
         Play,
         Sliders,
         RotateCcw,
+        AlertTriangle,
+        Trash2,
     } from "lucide-svelte";
     import { slide } from "svelte/transition";
+    import AccountResetModal from "$lib/components/AccountResetModal.svelte";
+    import { resetAllAccountData } from "$lib/stores";
 
     // Reactive: Category subjects
     $: categoryInfo = CATEGORY_MAP[$quizConfig.category];
@@ -32,6 +36,7 @@
     let taxonomyNodes: FlatTaxonomyNode[] = [];
     let loadingTaxonomy = false;
     let showAdvanced = false;
+    let showResetModal = false;
 
     // Dynamic Data
     let examIndex: any[] = []; // Loaded from JSON
@@ -334,6 +339,11 @@
     function selectQuickCount(n: number) {
         $quizConfig.questionCount = Math.min(n, validTotalCount || 1000);
     }
+
+    function handleAccountReset() {
+        resetAllAccountData();
+        goto("/");
+    }
 </script>
 
 <div class="min-h-screen p-6 pb-32 space-y-8">
@@ -431,23 +441,27 @@
                 </div>
 
                 <div
-                    class="px-2 pt-4 pb-2 relative h-8"
+                    class="relative h-8 w-full"
                     bind:this={sliderContainer}
                     on:mousemove={handleSliderMouseMove}
                     on:touchstart={handleSliderMouseMove}
                 >
-                    {#if availableYears.length > 0}
+                    {#if availableYears.length >= 2}
+                        {@const min = availableYears[0]}
+                        {@const max = availableYears[availableYears.length - 1]}
+                        {@const range = max - min || 1}
+
                         <!-- Dual Thumb Slider Simulation -->
                         <input
                             type="range"
-                            min={availableYears[0]}
-                            max={availableYears[availableYears.length - 1]}
+                            {min}
+                            {max}
                             bind:value={localStartYear}
                             on:input={() => {
                                 if (localStartYear > localEndYear)
                                     localStartYear = localEndYear;
                             }}
-                            class="absolute w-full h-8 appearance-none bg-transparent cursor-pointer range-input-fix"
+                            class="absolute left-0 right-0 h-8 appearance-none bg-transparent cursor-pointer range-input-fix"
                             style="z-index: {sliderPriority === 'start'
                                 ? 45
                                 : 40}; pointer-events: {sliderPriority ===
@@ -457,14 +471,14 @@
                         />
                         <input
                             type="range"
-                            min={availableYears[0]}
-                            max={availableYears[availableYears.length - 1]}
+                            {min}
+                            {max}
                             bind:value={localEndYear}
                             on:input={() => {
                                 if (localEndYear < localStartYear)
                                     localEndYear = localStartYear;
                             }}
-                            class="absolute w-full h-8 appearance-none bg-transparent cursor-pointer range-input-fix"
+                            class="absolute left-0 right-0 h-8 appearance-none bg-transparent cursor-pointer range-input-fix"
                             style="z-index: {sliderPriority === 'end'
                                 ? 45
                                 : 40}; pointer-events: {sliderPriority === 'end'
@@ -479,33 +493,23 @@
                         <!-- Active Range -->
                         <div
                             class="absolute top-1/2 -translate-y-1/2 h-2 bg-[#FF66CC] border-y border-black"
-                            style="left: {((localStartYear -
-                                availableYears[0]) /
-                                (availableYears[availableYears.length - 1] -
-                                    availableYears[0])) *
-                                100}%; right: {100 -
-                                ((localEndYear - availableYears[0]) /
-                                    (availableYears[availableYears.length - 1] -
-                                        availableYears[0])) *
-                                    100}%"
+                            style="left: {((localStartYear - min) / range) *
+                                100}%; 
+                                   right: {100 -
+                                ((localEndYear - min) / range) * 100}%"
                         ></div>
 
                         <!-- Thumbs -->
                         <div
                             class="absolute top-1/2 -translate-y-1/2 w-4 h-6 bg-white border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,0.5)] pointer-events-none transform -translate-x-1/2 flex items-center justify-center"
-                            style="left: {((localStartYear -
-                                availableYears[0]) /
-                                (availableYears[availableYears.length - 1] -
-                                    availableYears[0])) *
+                            style="left: {((localStartYear - min) / range) *
                                 100}%"
                         >
                             <div class="w-0.5 h-3 bg-gray-300"></div>
                         </div>
                         <div
                             class="absolute top-1/2 -translate-y-1/2 w-4 h-6 bg-white border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,0.5)] pointer-events-none transform -translate-x-1/2 flex items-center justify-center"
-                            style="left: {((localEndYear - availableYears[0]) /
-                                (availableYears[availableYears.length - 1] -
-                                    availableYears[0])) *
+                            style="left: {((localEndYear - min) / range) *
                                 100}%"
                         >
                             <div class="w-0.5 h-3 bg-gray-300"></div>
@@ -744,7 +748,38 @@
             </div>
         {/if}
     </section>
+
+    <!-- 5. Danger Zone -->
+    <section class="retro-window border-red-600">
+        <div
+            class="retro-header !bg-red-600 !text-white border-b-2 border-black flex justify-between px-4"
+        >
+            <span class="font-bold text-xs">DANGER_ZONE.sys</span>
+            <AlertTriangle size={14} />
+        </div>
+        <div class="p-6 bg-red-50/50">
+            <p
+                class="text-[10px] text-red-800 mb-4 font-bold uppercase tracking-tight"
+            >
+                Warning: The following actions are destructive and cannot be
+                undone.
+            </p>
+            <button
+                on:click={() => (showResetModal = true)}
+                class="w-full btn-retro bg-white text-red-600 border-red-600 hover:bg-red-50 py-3 font-bold flex items-center justify-center gap-2"
+            >
+                <Trash2 size={16} />
+                계정 데이터 초기화...
+            </button>
+        </div>
+    </section>
 </div>
+
+<AccountResetModal
+    show={showResetModal}
+    on:close={() => (showResetModal = false)}
+    on:reset={handleAccountReset}
+/>
 
 <style>
     /* Slider Customization */
@@ -753,6 +788,9 @@
         margin: 0;
         top: 0;
         left: 0;
+        right: 0;
+        width: 100%;
+        box-sizing: border-box;
     }
 
     input[type="range"]::-webkit-slider-thumb {

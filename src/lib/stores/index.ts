@@ -42,3 +42,39 @@ export const dataError = writable<string | null>(null);
 export * from './data';
 export * from './auth';
 export * from './gamification';
+
+/**
+ * Resets all user-specific training and profile data.
+ * Used for "Account Reset" functionality.
+ */
+export function resetAllAccountData() {
+    // 1. Reset Synced Stores (History, Wrong Notes, Memos, Seen IDs)
+    quizHistory.set([]);
+    wrongNotes.set([]);
+    questionMemos.set({});
+    seenIds.set([]);
+
+    // 2. Reset Quiz Config to Defaults
+    quizConfig.set({
+        category: '공법',
+        startYear: 2018,
+        endYear: 2024,
+        examTypes: ['official'],
+        selectedRounds: [],
+        selectedSubjects: [],
+        selectedCodes: [],
+        questionCount: 10,
+        prioritizeUnseen: true,
+        shuffleOptions: true
+    });
+
+    // 3. Reset Gamification (XP, Level, Missions)
+    import('./gamification').then(({ gamification }) => {
+        gamification.resetProfile();
+    });
+
+    // 4. Reset Mission Store (If separate from gamification store's missions)
+    import('../logic/missions').then(({ getInitialMissionState }) => {
+        missionStore.set(getInitialMissionState());
+    });
+}

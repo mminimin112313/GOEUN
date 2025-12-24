@@ -50,7 +50,13 @@
             <span>LOG_VIEWER.exe</span>
         </div>
         <div class="p-4 text-center">
-            <h1 class="text-xl font-pixel text-[#00ACC1]">REVIEW MODE</h1>
+            <h1 class="text-xl font-pixel text-[#00ACC1]">
+                {#if record}
+                    [{record.category}] {record.round}
+                {:else}
+                    REVIEW MODE
+                {/if}
+            </h1>
         </div>
     </header>
 

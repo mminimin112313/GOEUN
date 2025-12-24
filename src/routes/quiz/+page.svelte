@@ -36,10 +36,12 @@
     let questionTimes: number[] = [];
     let lastQuestionTime = Date.now();
 
-    // Drawing Mode (default ON)
+    // Drawing & Scroll state
     let drawMode = true;
     let canvasRef: QuizCanvas | undefined;
-    let qDrawings: Record<number, string> = {}; // Drawing persistence per question
+    let scrollContainer: HTMLDivElement;
+    let qDrawings: Record<number, string> = {}; // Drawing persistence
+    let qScrollPositions: Record<number, number> = {}; // Scroll persistence
     let strokeWidth = 2;
     let isToolbarOpen = false;
 
@@ -136,9 +138,12 @@
     }
 
     function goNext() {
-        // Save current drawing
+        // Save current drawing & scroll
         if (canvasRef) {
             qDrawings[currentIndex] = canvasRef.save();
+        }
+        if (scrollContainer) {
+            qScrollPositions[currentIndex] = scrollContainer.scrollTop;
         }
 
         questionTimes[currentIndex] = Math.floor(
@@ -148,12 +153,16 @@
         if (currentIndex < questions.length - 1) {
             currentIndex++;
 
-            // Load next drawing (delayed to ensure DOM update)
+            // Restore drawing & scroll (delayed)
             setTimeout(() => {
                 if (canvasRef) {
                     const saved = qDrawings[currentIndex];
                     if (saved) canvasRef.load(saved);
                     else canvasRef.clear();
+                }
+                if (scrollContainer) {
+                    scrollContainer.scrollTop =
+                        qScrollPositions[currentIndex] || 0;
                 }
             }, 0);
         }
@@ -161,19 +170,26 @@
 
     function goPrev() {
         if (currentIndex > 0) {
-            // Save current drawing
+            // Save current drawing & scroll
             if (canvasRef) {
                 qDrawings[currentIndex] = canvasRef.save();
+            }
+            if (scrollContainer) {
+                qScrollPositions[currentIndex] = scrollContainer.scrollTop;
             }
 
             currentIndex--;
 
-            // Load previous drawing
+            // Restore drawing & scroll
             setTimeout(() => {
                 if (canvasRef) {
                     const saved = qDrawings[currentIndex];
                     if (saved) canvasRef.load(saved);
                     else canvasRef.clear();
+                }
+                if (scrollContainer) {
+                    scrollContainer.scrollTop =
+                        qScrollPositions[currentIndex] || 0;
                 }
             }, 0);
         }
@@ -209,7 +225,10 @@
             id: Date.now(),
             date: new Date().toLocaleDateString("ko-KR"),
             timestamp: Date.now(),
-            category: $quizSession.config.category,
+            category:
+                $quizSession.config.category ||
+                questions[0]?.subject_category ||
+                "미분류",
             round: $quizSession.config.round,
             score: stats.correct,
             total: questions.length,
@@ -343,6 +362,7 @@
 
             <!-- Content Area (Scrollable) -->
             <div
+                bind:this={scrollContainer}
                 class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar relative"
             >
                 <div class="relative min-h-full">

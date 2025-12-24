@@ -4,7 +4,9 @@
         quizHistory,
         wrongNotes,
         quizSession,
+        questionMemos,
     } from "$lib/stores";
+    import { isCorrectAnswer } from "$lib/logic/quizEngine";
     import { CATEGORY_MAP, AVAILABLE_ROUNDS } from "$lib/config";
     import { goto } from "$app/navigation";
     import LevelProgress from "$lib/components/LevelProgress.svelte";
@@ -40,7 +42,26 @@
                   ) / totalQuizzes,
               )
             : 0;
-    $: wrongCount = $wrongNotes.filter((n) => !n.isGraduated).length;
+    // Derived Wrong Count from Logs (Sync with Review page logic)
+    $: wrongCountFromLogs = (() => {
+        const wrongIds = new Set<number>();
+        $quizHistory.forEach((record) => {
+            record.questions.forEach((q, idx) => {
+                const userAnswer = record.answers[idx];
+                if (
+                    userAnswer !== undefined &&
+                    !isCorrectAnswer(q, userAnswer)
+                ) {
+                    if (!$questionMemos[q.id]?.isGraduated) {
+                        wrongIds.add(q.id);
+                    }
+                }
+            });
+        });
+        return wrongIds.size;
+    })();
+
+    $: wrongCount = wrongCountFromLogs;
 
     async function handleQuickStart() {
         if (isLoading) return;

@@ -235,8 +235,9 @@
                         <!-- Info -->
                         <div class="flex-1 p-3 min-w-0">
                             <div class="font-bold text-sm text-black truncate">
-                                {record.category}
-                                {record.round}
+                                [<span class="text-[#00ACC1]"
+                                    >{record.category}</span
+                                >] {record.round}
                             </div>
                             <div
                                 class="text-[10px] text-gray-500 font-bold mt-1 flex gap-2"

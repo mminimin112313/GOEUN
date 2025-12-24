@@ -240,18 +240,23 @@ function createGamificationStore() {
         }),
 
         // ... (checkStreak remains same)
-        checkStreak: () => update(state => {
-            const today = new Date().toISOString().split('T')[0];
-            const last = state.profile.lastStudyDate ? state.profile.lastStudyDate.split('T')[0] : '';
-            if (today === last) return state;
-            const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-            let newStreak = state.profile.streak;
-            if (last === yesterday) newStreak++;
-            else newStreak = 1;
-            const newState = { ...state, profile: { ...state.profile, streak: newStreak, lastStudyDate: new Date().toISOString() } };
-            save(newState);
-            return newState;
-        })
+
+        resetProfile: () => {
+            const d = generateMissions(MISSION_POOL_DAILY, 3, 'd');
+            const w = generateMissions(MISSION_POOL_WEEKLY, 2, 'w');
+            const t: Mission[] = [
+                { id: 'tut_quiz', type: 'quiz_count', desc: '첫 걸음: 문제 1개 풀기', target: 1, current: 0, rewardXp: 100, isCompleted: false, claimed: false },
+                { id: 'tut_memo', type: 'memo_use', desc: '낙서왕: 문제 풀이 중 펜(메모) 써보기', target: 1, current: 0, rewardXp: 50, isCompleted: false, claimed: false },
+                { id: 'tut_nav', type: 'nav_review', desc: '탐험가: 오답 노트 메뉴 구경하기', target: 1, current: 0, rewardXp: 50, isCompleted: false, claimed: false }
+            ];
+
+            const resetState = {
+                profile: { ...INITIAL_PROFILE, badges: [] },
+                missions: { daily: d, weekly: w, tutorial: t }
+            };
+            set(resetState);
+            save(resetState);
+        }
     };
 }
 
