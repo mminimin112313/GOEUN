@@ -1,0 +1,197 @@
+{
+  "subject": "형법",
+  "categories": [
+    {
+      "depth1_code": "CRI_01",
+      "depth1_name": "형법총론",
+      "depth2_items": [
+        {
+          "depth2_code": "CRI_01_01",
+          "depth2_name": "범죄론의 기초",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_01_01_01",
+              "depth3_name": "죄형법정주의"
+            },
+            {
+              "depth3_code": "CRI_01_01_02",
+              "depth3_name": "형법의 적용범위"
+            },
+            {
+              "depth3_code": "CRI_01_01_03",
+              "depth3_name": "범죄의 종류 및 주체"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRI_01_02",
+          "depth2_name": "구성요건론",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_01_02_01",
+              "depth3_name": "인과관계와 객관적 귀속"
+            },
+            {
+              "depth3_code": "CRI_01_02_02",
+              "depth3_name": "구성요건적 고의와 착오"
+            },
+            {
+              "depth3_code": "CRI_01_02_03",
+              "depth3_name": "부작위범"
+            },
+            {
+              "depth3_code": "CRI_01_02_04",
+              "depth3_name": "과실범 및 결과적 가중범"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRI_01_03",
+          "depth2_name": "위법성 및 책임론",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_01_03_01",
+              "depth3_name": "위법성조각사유"
+            },
+            {
+              "depth3_code": "CRI_01_03_02",
+              "depth3_name": "책임능력 및 위법성의 인식"
+            },
+            {
+              "depth3_code": "CRI_01_03_03",
+              "depth3_name": "법률의 착오 및 기대가능성"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRI_01_04",
+          "depth2_name": "미수, 공범, 죄수론",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_01_04_01",
+              "depth3_name": "미수론"
+            },
+            {
+              "depth3_code": "CRI_01_04_02",
+              "depth3_name": "공범론"
+            },
+            {
+              "depth3_code": "CRI_01_04_03",
+              "depth3_name": "죄수론 및 형벌론"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CRI_02",
+      "depth1_name": "형법각론(개인적 법익)",
+      "depth2_items": [
+        {
+          "depth2_code": "CRI_02_01",
+          "depth2_name": "생명, 신체, 자유에 대한 죄",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_02_01_01",
+              "depth3_name": "살인의 죄 및 상해와 폭행의 죄"
+            },
+            {
+              "depth3_code": "CRI_02_01_02",
+              "depth3_name": "유기와 학대의 죄"
+            },
+            {
+              "depth3_code": "CRI_02_01_03",
+              "depth3_name": "협박, 체포, 감금, 약취, 유인 및 인신매매의 죄"
+            },
+            {
+              "depth3_code": "CRI_02_01_04",
+              "depth3_name": "강간과 추행의 죄"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRI_02_02",
+          "depth2_name": "명예, 신용, 업무에 대한 죄",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_02_02_01",
+              "depth3_name": "명예에 관한 죄"
+            },
+            {
+              "depth3_code": "CRI_02_02_02",
+              "depth3_name": "신용, 업무 및 경매에 관한 죄"
+            },
+            {
+              "depth3_code": "CRI_02_02_03",
+              "depth3_name": "비밀침해 및 주거침입의 죄"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRI_02_03",
+          "depth2_name": "재산에 대한 죄",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_02_03_01",
+              "depth3_name": "절도와 강도의 죄"
+            },
+            {
+              "depth3_code": "CRI_02_03_02",
+              "depth3_name": "사기와 공갈의 죄"
+            },
+            {
+              "depth3_code": "CRI_02_03_03",
+              "depth3_name": "횡령과 배임의 죄"
+            },
+            {
+              "depth3_code": "CRI_02_03_04",
+              "depth3_name": "장물, 손괴 및 권리행사방해의 죄"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CRI_03",
+      "depth1_name": "형법각론(사회적 및 국가적 법익)",
+      "depth2_items": [
+        {
+          "depth2_code": "CRI_03_01",
+          "depth2_name": "사회적 법익에 대한 죄",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_03_01_01",
+              "depth3_name": "공공의 안전과 평온에 대한 죄"
+            },
+            {
+              "depth3_code": "CRI_03_01_02",
+              "depth3_name": "공공의 신용에 대한 죄(통화, 유가증권, 문서)"
+            },
+            {
+              "depth3_code": "CRI_03_01_03",
+              "depth3_name": "공중의 건강과 사회의 도덕에 대한 죄"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRI_03_02",
+          "depth2_name": "국가적 법익에 대한 죄",
+          "depth3_items": [
+            {
+              "depth3_code": "CRI_03_02_01",
+              "depth3_name": "국가의 존립과 권위에 대한 죄"
+            },
+            {
+              "depth3_code": "CRI_03_02_02",
+              "depth3_name": "국가의 기능에 대한 죄(내물, 공무방해)"
+            },
+            {
+              "depth3_code": "CRI_03_02_03",
+              "depth3_name": "사법권의 행사를 방해하는 죄(위증, 무고)"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

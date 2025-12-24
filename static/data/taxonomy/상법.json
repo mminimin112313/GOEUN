@@ -1,0 +1,197 @@
+{
+  "subject": "상법",
+  "categories": [
+    {
+      "depth1_code": "COM_01",
+      "depth1_name": "상법총칙 및 상행위",
+      "depth2_items": [
+        {
+          "depth2_code": "COM_01_01",
+          "depth2_name": "상법총칙",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_01_01_01",
+              "depth3_name": "상인과 상업사용인"
+            },
+            {
+              "depth3_code": "COM_01_01_02",
+              "depth3_name": "상호 및 상업장부"
+            },
+            {
+              "depth3_code": "COM_01_01_03",
+              "depth3_name": "상업등기와 영업양도"
+            }
+          ]
+        },
+        {
+          "depth2_code": "COM_01_02",
+          "depth2_name": "상행위",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_01_02_01",
+              "depth3_name": "통칙 및 특수한 상행위"
+            },
+            {
+              "depth3_code": "COM_01_02_02",
+              "depth3_name": "상사매매 및 익명조합"
+            },
+            {
+              "depth3_code": "COM_01_02_03",
+              "depth3_name": "운송업 및 위탁매매업"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "COM_02",
+      "depth1_name": "회사법",
+      "depth2_items": [
+        {
+          "depth2_code": "COM_02_01",
+          "depth2_name": "주식회사 설립",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_02_01_01",
+              "depth3_name": "회사의 개념 및 법인격부인론"
+            },
+            {
+              "depth3_code": "COM_02_01_02",
+              "depth3_name": "설립절차 및 설립 중의 회사"
+            },
+            {
+              "depth3_code": "COM_02_01_03",
+              "depth3_name": "발기인의 책임"
+            }
+          ]
+        },
+        {
+          "depth2_code": "COM_02_02",
+          "depth2_name": "주식과 주주",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_02_02_01",
+              "depth3_name": "주식양도의 방법 및 제한"
+            },
+            {
+              "depth3_code": "COM_02_02_02",
+              "depth3_name": "자기주식 취득 및 주식매수선택권"
+            },
+            {
+              "depth3_code": "COM_02_02_03",
+              "depth3_name": "주주명부 및 명의개서"
+            }
+          ]
+        },
+        {
+          "depth2_code": "COM_02_03",
+          "depth2_name": "회사의 기관",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_02_03_01",
+              "depth3_name": "주주총회 운영 및 결의의 하자"
+            },
+            {
+              "depth3_code": "COM_02_03_02",
+              "depth3_name": "이사회의 운영 및 권한"
+            },
+            {
+              "depth3_code": "COM_02_03_03",
+              "depth3_name": "이사의 의무와 책임"
+            },
+            {
+              "depth3_code": "COM_02_03_04",
+              "depth3_name": "이사와 회사 간의 이익충돌 및 자기거래"
+            }
+          ]
+        },
+        {
+          "depth2_code": "COM_02_04",
+          "depth2_name": "자본조달 및 구조개편",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_02_04_01",
+              "depth3_name": "신주발행 및 준비금"
+            },
+            {
+              "depth3_code": "COM_02_04_02",
+              "depth3_name": "사채 및 전환사채"
+            },
+            {
+              "depth3_code": "COM_02_04_03",
+              "depth3_name": "합병, 분할, 주식의 포괄적 교환"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "COM_03",
+      "depth1_name": "어음수표법",
+      "depth2_items": [
+        {
+          "depth2_code": "COM_03_01",
+          "depth2_name": "어음법 총론",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_03_01_01",
+              "depth3_name": "어음행위의 위조와 변조"
+            },
+            {
+              "depth3_code": "COM_03_01_02",
+              "depth3_name": "어음의 항변"
+            }
+          ]
+        },
+        {
+          "depth2_code": "COM_03_02",
+          "depth2_name": "어음법 각론",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_03_02_01",
+              "depth3_name": "배서와 양도"
+            },
+            {
+              "depth3_code": "COM_03_02_02",
+              "depth3_name": "지급 및 소구권"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "COM_04",
+      "depth1_name": "보험법",
+      "depth2_items": [
+        {
+          "depth2_code": "COM_04_01",
+          "depth2_name": "보험법 통칙",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_04_01_01",
+              "depth3_name": "보험계약의 고지의무"
+            },
+            {
+              "depth3_code": "COM_04_01_02",
+              "depth3_name": "보험금 지급 및 면책사유"
+            }
+          ]
+        },
+        {
+          "depth2_code": "COM_04_02",
+          "depth2_name": "손해보험 및 인보험",
+          "depth3_items": [
+            {
+              "depth3_code": "COM_04_02_01",
+              "depth3_name": "보험자대위"
+            },
+            {
+              "depth3_code": "COM_04_02_02",
+              "depth3_name": "타인을 위한 보험 및 생명보험"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

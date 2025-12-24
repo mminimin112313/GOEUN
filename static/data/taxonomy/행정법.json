@@ -1,0 +1,135 @@
+{
+  "subject": "행정법",
+  "categories": [
+    {
+      "depth1_code": "ADM_01",
+      "depth1_name": "행정법총론",
+      "depth2_items": [
+        {
+          "depth2_code": "ADM_01_01",
+          "depth2_name": "행정법의 기초이론",
+          "depth3_items": [
+            {
+              "depth3_code": "ADM_01_01_01",
+              "depth3_name": "행정의 의의와 법치행정의 원칙"
+            },
+            {
+              "depth3_code": "ADM_01_01_02",
+              "depth3_name": "행정법의 일반원칙"
+            },
+            {
+              "depth3_code": "ADM_01_01_03",
+              "depth3_name": "행정상 법률관계와 공권·공의무"
+            }
+          ]
+        },
+        {
+          "depth2_code": "ADM_01_02",
+          "depth2_name": "행정작용법",
+          "depth3_items": [
+            {
+              "depth3_code": "ADM_01_02_01",
+              "depth3_name": "행정입법(법규명령·행정규칙)"
+            },
+            {
+              "depth3_code": "ADM_01_02_02",
+              "depth3_name": "행정행위의 개념과 종류(허가·특허·인가)"
+            },
+            {
+              "depth3_code": "ADM_01_02_03",
+              "depth3_name": "행정행위의 부관, 효력 및 하자"
+            },
+            {
+              "depth3_code": "ADM_01_02_04",
+              "depth3_name": "그 밖의 행정형식(확약·공법상 계약)"
+            }
+          ]
+        },
+        {
+          "depth2_code": "ADM_01_03",
+          "depth2_name": "행정절차 및 실효성 확보",
+          "depth3_items": [
+            {
+              "depth3_code": "ADM_01_03_01",
+              "depth3_name": "행정절차법 및 정보공개"
+            },
+            {
+              "depth3_code": "ADM_01_03_02",
+              "depth3_name": "행정상 강제집행 및 즉시강제"
+            },
+            {
+              "depth3_code": "ADM_01_03_03",
+              "depth3_name": "행정벌 및 새로운 실효성 확보수단"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "ADM_02",
+      "depth1_name": "행정구제법",
+      "depth2_items": [
+        {
+          "depth2_code": "ADM_02_01",
+          "depth2_name": "행정상 손해전보",
+          "depth3_items": [
+            {
+              "depth3_code": "ADM_02_01_01",
+              "depth3_name": "국가배상책임"
+            },
+            {
+              "depth3_code": "ADM_02_01_02",
+              "depth3_name": "행정상 손실보상"
+            }
+          ]
+        },
+        {
+          "depth2_code": "ADM_02_02",
+          "depth2_name": "행정쟁송",
+          "depth3_items": [
+            {
+              "depth3_code": "ADM_02_02_01",
+              "depth3_name": "행정심판의 종류와 절차"
+            },
+            {
+              "depth3_code": "ADM_02_02_02",
+              "depth3_name": "항고소송(취소소송의 요건 및 본안심리)"
+            },
+            {
+              "depth3_code": "ADM_02_02_03",
+              "depth3_name": "취소소송의 판결 및 기속력"
+            },
+            {
+              "depth3_code": "ADM_02_02_04",
+              "depth3_name": "당사자소송 및 무효등확인소송"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "ADM_03",
+      "depth1_name": "행정법각론",
+      "depth2_items": [
+        {
+          "depth2_code": "ADM_03_01",
+          "depth2_name": "부문별 행정법",
+          "depth3_items": [
+            {
+              "depth3_code": "ADM_03_01_01",
+              "depth3_name": "행정조직법 및 지방자치법"
+            },
+            {
+              "depth3_code": "ADM_03_01_02",
+              "depth3_name": "공무원법 및 공물법"
+            },
+            {
+              "depth3_code": "ADM_03_01_03",
+              "depth3_name": "경찰행정법 및 공용수용"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,91 @@
+{
+    "subject": "형사소송법",
+    "categories": [
+        {
+            "id": "CRIMPRO_01",
+            "name": "서론 및 소송주체",
+            "subcategories": [
+                {
+                    "id": "CRIMPRO_01_01",
+                    "name": "형사소송법의 이념과 구조 (적법절차, 실체적진실)"
+                },
+                {
+                    "id": "CRIMPRO_01_02",
+                    "name": "소송주체 (법원, 검사, 피고인, 변호인)"
+                }
+            ]
+        },
+        {
+            "id": "CRIMPRO_02",
+            "name": "수사",
+            "subcategories": [
+                {
+                    "id": "CRIMPRO_02_01",
+                    "name": "수사의 개시 (고소, 고발, 자수)"
+                },
+                {
+                    "id": "CRIMPRO_02_02",
+                    "name": "임의수사 (피의자신문, 참고인조사)"
+                },
+                {
+                    "id": "CRIMPRO_02_03",
+                    "name": "강제처분 (체포, 구속, 압수, 수색, 검증)"
+                },
+                {
+                    "id": "CRIMPRO_02_04",
+                    "name": "수사의 종결 (불기소처분, 재정신청)"
+                }
+            ]
+        },
+        {
+            "id": "CRIMPRO_03",
+            "name": "공소",
+            "subcategories": [
+                {
+                    "id": "CRIMPRO_03_01",
+                    "name": "공소제기의 방식과 효과"
+                },
+                {
+                    "id": "CRIMPRO_03_02",
+                    "name": "공소시효"
+                }
+            ]
+        },
+        {
+            "id": "CRIMPRO_04",
+            "name": "공판",
+            "subcategories": [
+                {
+                    "id": "CRIMPRO_04_01",
+                    "name": "공판절차"
+                },
+                {
+                    "id": "CRIMPRO_04_02",
+                    "name": "증거법 (증거재판주의, 자백배제/보강, 전문법칙, 위법수집증거배제)"
+                },
+                {
+                    "id": "CRIMPRO_04_03",
+                    "name": "재판 (유죄/무죄, 관할위반, 공소기각, 면소)"
+                }
+            ]
+        },
+        {
+            "id": "CRIMPRO_05",
+            "name": "상소 및 기타 절차",
+            "subcategories": [
+                {
+                    "id": "CRIMPRO_05_01",
+                    "name": "상소 (항소, 상고, 항고)"
+                },
+                {
+                    "id": "CRIMPRO_05_02",
+                    "name": "비상구제절차 (재심, 비상상고)"
+                },
+                {
+                    "id": "CRIMPRO_05_03",
+                    "name": "특별절차 (약식절차, 즉결심판, 소년형사)"
+                }
+            ]
+        }
+    ]
+}

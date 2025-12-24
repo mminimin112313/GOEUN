@@ -1,0 +1,22 @@
+/** @type {import('tailwindcss').Config} */
+const config = {
+    content: ['./src/**/*.{html,js,svelte,ts}'],
+    theme: {
+        extend: {
+            colors: {
+                brand: '#1e293b', // Slate-800 (Primary/Headers)
+                action: '#4f46e5', // Indigo-600 (Buttons/Links)
+                surface: '#f8fafc', // Slate-50 (Background)
+                success: '#0d9488', // Teal-600
+                warning: '#f59e0b', // Amber-500
+                error: '#f43f5e', // Rose-500
+            },
+            fontFamily: {
+                sans: ['Pretendard Variable', 'Pretendard', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+            }
+        }
+    },
+    plugins: []
+};
+
+export default config;

@@ -1,0 +1,255 @@
+{
+  "subject": "민사소송법",
+  "categories": [
+    {
+      "depth1_code": "CPL_01",
+      "depth1_name": "소송의 주체",
+      "depth2_items": [
+        {
+          "depth2_code": "CPL_01_01",
+          "depth2_name": "법원",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_01_01_01",
+              "depth3_name": "재판권과 관할"
+            },
+            {
+              "depth3_code": "CPL_01_01_02",
+              "depth3_name": "관할의 이송"
+            },
+            {
+              "depth3_code": "CPL_01_01_03",
+              "depth3_name": "법관의 제척, 기피, 회피"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CPL_01_02",
+          "depth2_name": "당사자",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_01_02_01",
+              "depth3_name": "당사자 확정 및 표시정정"
+            },
+            {
+              "depth3_code": "CPL_01_02_02",
+              "depth3_name": "당사자능력과 소송능력"
+            },
+            {
+              "depth3_code": "CPL_01_02_03",
+              "depth3_name": "당사자적격 및 소송담당"
+            },
+            {
+              "depth3_code": "CPL_01_02_04",
+              "depth3_name": "소송대리인"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CPL_02",
+      "depth1_name": "제1심 소송절차",
+      "depth2_items": [
+        {
+          "depth2_code": "CPL_02_01",
+          "depth2_name": "소의 제기",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_02_01_01",
+              "depth3_name": "소송물 이론"
+            },
+            {
+              "depth3_code": "CPL_02_01_02",
+              "depth3_name": "소의 이익"
+            },
+            {
+              "depth3_code": "CPL_02_01_03",
+              "depth3_name": "중복제소 금지"
+            },
+            {
+              "depth3_code": "CPL_02_01_04",
+              "depth3_name": "소제기의 효과"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CPL_02_02",
+          "depth2_name": "변론",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_02_02_01",
+              "depth3_name": "변론주의와 처분권주의"
+            },
+            {
+              "depth3_code": "CPL_02_02_02",
+              "depth3_name": "부인과 항변"
+            },
+            {
+              "depth3_code": "CPL_02_02_03",
+              "depth3_name": "소송행위의 철회 및 추완"
+            },
+            {
+              "depth3_code": "CPL_02_02_04",
+              "depth3_name": "기일, 기간 및 송달"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CPL_02_03",
+          "depth2_name": "증거",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_02_03_01",
+              "depth3_name": "증명책임"
+            },
+            {
+              "depth3_code": "CPL_02_03_02",
+              "depth3_name": "재판상 자백"
+            },
+            {
+              "depth3_code": "CPL_02_03_03",
+              "depth3_name": "서증 및 문서제출명령"
+            },
+            {
+              "depth3_code": "CPL_02_03_04",
+              "depth3_name": "증인신문 및 감정"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CPL_03",
+      "depth1_name": "소송의 종료",
+      "depth2_items": [
+        {
+          "depth2_code": "CPL_03_01",
+          "depth2_name": "당사자에 의한 종료",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_03_01_01",
+              "depth3_name": "소의 취하 및 재제소 금지"
+            },
+            {
+              "depth3_code": "CPL_03_01_02",
+              "depth3_name": "청구의 포기 및 인낙"
+            },
+            {
+              "depth3_code": "CPL_03_01_03",
+              "depth3_name": "재판상 화해"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CPL_03_02",
+          "depth2_name": "종국판결과 기판력",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_03_02_01",
+              "depth3_name": "판결의 효력 및 기판력 범위"
+            },
+            {
+              "depth3_code": "CPL_03_02_02",
+              "depth3_name": "기판력의 시적 범위"
+            },
+            {
+              "depth3_code": "CPL_03_02_03",
+              "depth3_name": "기판력의 주관적 범위와 승계인"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CPL_04",
+      "depth1_name": "병합소송",
+      "depth2_items": [
+        {
+          "depth2_code": "CPL_04_01",
+          "depth2_name": "객관적 병합",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_04_01_01",
+              "depth3_name": "청구의 병합 및 변경"
+            },
+            {
+              "depth3_code": "CPL_04_01_02",
+              "depth3_name": "반소"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CPL_04_02",
+          "depth2_name": "공동소송",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_04_02_01",
+              "depth3_name": "통상공동소송"
+            },
+            {
+              "depth3_code": "CPL_04_02_02",
+              "depth3_name": "필수적 공동소송"
+            },
+            {
+              "depth3_code": "CPL_04_02_03",
+              "depth3_name": "예비적 선택적 공동소송"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CPL_04_03",
+          "depth2_name": "참가 및 승계",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_04_03_01",
+              "depth3_name": "보조참가"
+            },
+            {
+              "depth3_code": "CPL_04_03_02",
+              "depth3_name": "독립당사자참가"
+            },
+            {
+              "depth3_code": "CPL_04_03_03",
+              "depth3_name": "소송승계"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CPL_05",
+      "depth1_name": "상소 및 재심",
+      "depth2_items": [
+        {
+          "depth2_code": "CPL_05_01",
+          "depth2_name": "상소",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_05_01_01",
+              "depth3_name": "항소심 절차 및 불이익변경금지"
+            },
+            {
+              "depth3_code": "CPL_05_01_02",
+              "depth3_name": "부대항소"
+            },
+            {
+              "depth3_code": "CPL_05_01_03",
+              "depth3_name": "상고심 절차"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CPL_05_02",
+          "depth2_name": "재심",
+          "depth3_items": [
+            {
+              "depth3_code": "CPL_05_02_01",
+              "depth3_name": "재심사유와 절차"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

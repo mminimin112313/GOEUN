@@ -1,0 +1,242 @@
+@import "tailwindcss";
+
+@theme {
+  /* 📺 Byeonsi CBT: Neo-Pixel Palette (Doc #11) */
+  --color-base: #F5F5F5;
+  /* Cleaner Grey for prolonged reading */
+  --color-brand: #FF66CC;
+  /* Neo Pink */
+  --color-brand-light: #FFCCEF;
+  /* Soft Pink */
+  --color-accent: #66CCFF;
+  /* Sky Blue */
+  --color-success: #99FF99;
+  /* Acid Green */
+  --color-warning: #FFFF99;
+  /* Construction Yellow */
+  --color-error: #FF6666;
+  /* Urgent Red */
+
+  --color-text-main: #111111;
+  /* Sharp Black */
+  --color-text-sub: #666666;
+  /* Soft Grey */
+
+  --color-window-bg: #FFFFFF;
+  --color-window-header: linear-gradient(90deg, #111111, #333333);
+  /* Professional Dark Header */
+
+  /* Typography */
+  --font-sans: "Pretendard", system-ui, sans-serif;
+  /* Primary Reading */
+  --font-pixel: "DungGeunMo", monospace;
+  /* Headers & Decor */
+
+  /* Retro Borders (Hardpoints) */
+  --border-window: 2px solid #000000;
+  --border-thin: 1px solid #000000;
+
+  /* Shadows (Depth) */
+  --shadow-retro: 4px 4px 0px 0px #000000;
+  /* Crisp Hard Shadow */
+  --shadow-retro-sm: 2px 2px 0px 0px #000000;
+  --shadow-retro-hover: 6px 6px 0px 0px #000000;
+}
+
+@layer base {
+  @font-face {
+    font-family: 'DungGeunMo';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_six@1.2/DungGeunMo.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+  }
+
+  body {
+    background-color: var(--color-base);
+    color: var(--color-text-main);
+    font-family: var(--font-sans);
+    line-height: 1.7;
+    /* Relaxed leading */
+    letter-spacing: -0.025em;
+    /* Tighter tracking for modern feel */
+    word-spacing: 0.05em;
+
+    /* 🕸️ Delicate Grid (Doc #11) */
+    background-image:
+      linear-gradient(rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    background-size: 24px 24px;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #FFF;
+    border-left: 2px solid #000;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #000;
+    border-radius: 0;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #333;
+  }
+}
+
+@layer utilities {
+
+  /* 🖥️ Neo-Retro Window (Doc #12) */
+  .retro-window {
+    @apply bg-white relative overflow-hidden;
+    border: var(--border-window);
+    box-shadow: var(--shadow-retro);
+    border-radius: 0px;
+    /* Brutalist squared edges per Doc #11 */
+  }
+
+  .retro-header {
+    @apply flex items-center justify-between px-3 py-2;
+    background: var(--color-window-header);
+    border-bottom: var(--border-window);
+    color: white;
+    font-family: var(--font-pixel);
+    font-size: 1.0rem;
+    letter-spacing: 0.05em;
+  }
+
+  .retro-btn-control {
+    @apply w-4 h-4 flex items-center justify-center border border-white bg-transparent text-white font-bold text-[10px] hover:bg-white hover:text-black cursor-pointer transition-colors;
+  }
+
+  /* 🔘 BtnRetro (Doc #12 Micro-interactions) */
+  .btn-retro {
+    @apply px-4 py-2 font-bold transition-all relative overflow-hidden text-black;
+    border: var(--border-thin);
+    background: white;
+    box-shadow: var(--shadow-retro-sm);
+    border-radius: 0px;
+    font-family: var(--font-pixel);
+    transform: translate(0, 0);
+  }
+
+  @keyframes walk {
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-100%);
+    }
+  }
+
+  /* 3x3 Grid Sprite Animation (9 frames) */
+  @keyframes walk-grid {
+    0% {
+      background-position: 0% 0%;
+    }
+
+    11.11% {
+      background-position: 50% 0%;
+    }
+
+    22.22% {
+      background-position: 100% 0%;
+    }
+
+    33.33% {
+      background-position: 0% 50%;
+    }
+
+    44.44% {
+      background-position: 50% 50%;
+    }
+
+    55.55% {
+      background-position: 100% 50%;
+    }
+
+    66.66% {
+      background-position: 0% 100%;
+    }
+
+    77.77% {
+      background-position: 50% 100%;
+    }
+
+    88.88% {
+      background-position: 100% 100%;
+    }
+
+    100% {
+      background-position: 0% 0%;
+    }
+  }
+
+  .animate-sprite-grid {
+    width: 100%;
+    height: 100%;
+    background-size: 300% 300%;
+    /* 3x3 grid means image is 300% larger than viewport */
+    background-repeat: no-repeat;
+    animation: walk-grid 1.5s step-start infinite;
+    image-rendering: pixelated;
+  }
+
+  .animate-sprite {
+    animation: walk 1s steps(4) infinite;
+  }
+
+  @keyframes bounce-pixel {
+
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-4px);
+    }
+  }
+
+  .btn-retro:hover {
+    transform: translate(-1px, -1px);
+    box-shadow: var(--shadow-retro-hover);
+  }
+
+  .btn-retro:active {
+    transform: translate(1px, 1px);
+    box-shadow: 0px 0px 0px #000;
+  }
+
+  .btn-retro-pink {
+    @apply text-white border-black;
+    background: var(--color-brand);
+  }
+
+  .btn-retro-pink:hover {
+    background: #ff4db8;
+  }
+
+  .btn-retro-blue {
+    @apply text-white border-black;
+    background: var(--color-accent);
+  }
+
+  /* 🏷️ Chips */
+  .pixel-tag {
+    @apply px-2 py-0.5 text-[10px] font-bold inline-block border border-black bg-white;
+    font-family: var(--font-pixel);
+    box-shadow: 1px 1px 0px #000;
+  }
+
+  /* ✨ Text Styles */
+  .text-shadow-sm {
+    text-shadow: 1px 1px 0px rgba(0, 0, 0, 0.1);
+  }
+}

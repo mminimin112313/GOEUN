@@ -1,0 +1,191 @@
+{
+  "subject": "형사소송법",
+  "categories": [
+    {
+      "depth1_code": "CRL_01",
+      "depth1_name": "수사 및 공소제기",
+      "depth2_items": [
+        {
+          "depth2_code": "CRL_01_01",
+          "depth2_name": "수사의 기초 및 개시",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_01_01_01",
+              "depth3_name": "수사의 구조 및 거절권"
+            },
+            {
+              "depth3_code": "CRL_01_01_02",
+              "depth3_name": "수사의 단서(고소, 고발, 불심검문)"
+            },
+            {
+              "depth3_code": "CRL_01_01_03",
+              "depth3_name": "임의수사와 강제수사의 한계"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRL_01_02",
+          "depth2_name": "강제처분",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_01_02_01",
+              "depth3_name": "피의자 체포 및 구속"
+            },
+            {
+              "depth3_code": "CRL_01_02_02",
+              "depth3_name": "압수, 수색, 검증"
+            },
+            {
+              "depth3_code": "CRL_01_02_03",
+              "depth3_name": "판사전의 강제처분(증거보전 등)"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRL_01_03",
+          "depth2_name": "수사의 종결 및 공소제기",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_01_03_01",
+              "depth3_name": "검사의 수사종결처분 및 통제"
+            },
+            {
+              "depth3_code": "CRL_01_03_02",
+              "depth3_name": "공소제기의 방식 및 효과"
+            },
+            {
+              "depth3_code": "CRL_01_03_03",
+              "depth3_name": "공소시효"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CRL_02",
+      "depth1_name": "공판절차",
+      "depth2_items": [
+        {
+          "depth2_code": "CRL_02_01",
+          "depth2_name": "공판절차의 기초",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_02_01_01",
+              "depth3_name": "공판준비절차 및 공판기일"
+            },
+            {
+              "depth3_code": "CRL_02_01_02",
+              "depth3_name": "공소장변경"
+            },
+            {
+              "depth3_code": "CRL_02_01_03",
+              "depth3_name": "공판절차의 정지와 갱신"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRL_02_02",
+          "depth2_name": "특수 공판절차 및 재판",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_02_02_01",
+              "depth3_name": "간이공판절차 및 국민참여재판"
+            },
+            {
+              "depth3_code": "CRL_02_02_02",
+              "depth3_name": "판결 및 결정의 종류"
+            },
+            {
+              "depth3_code": "CRL_02_02_03",
+              "depth3_name": "재판의 효력(기판력)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CRL_03",
+      "depth1_name": "증거법",
+      "depth2_items": [
+        {
+          "depth2_code": "CRL_03_01",
+          "depth2_name": "증거법 원칙",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_03_01_01",
+              "depth3_name": "증거재판주의 및 자유심증주의"
+            },
+            {
+              "depth3_code": "CRL_03_01_02",
+              "depth3_name": "위법수집증거배제법칙"
+            },
+            {
+              "depth3_code": "CRL_03_01_03",
+              "depth3_name": "자백배제법칙 및 자백의 보강법칙"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRL_03_02",
+          "depth2_name": "전문증거와 전문법칙",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_03_02_01",
+              "depth3_name": "전문법칙의 예외(제311조~제316조)"
+            },
+            {
+              "depth3_code": "CRL_03_02_02",
+              "depth3_name": "진술거부권과 당연히 증거능력 있는 서류"
+            },
+            {
+              "depth3_code": "CRL_03_02_03",
+              "depth3_name": "당사자의 동의와 증거능력"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CRL_04",
+      "depth1_name": "상소 및 기타 절차",
+      "depth2_items": [
+        {
+          "depth2_code": "CRL_04_01",
+          "depth2_name": "상소",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_04_01_01",
+              "depth3_name": "상소권 및 상소이익"
+            },
+            {
+              "depth3_code": "CRL_04_01_02",
+              "depth3_name": "항소, 상고, 항고"
+            },
+            {
+              "depth3_code": "CRL_04_01_03",
+              "depth3_name": "불이익변경금지의 원칙"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CRL_04_02",
+          "depth2_name": "특별절차",
+          "depth3_items": [
+            {
+              "depth3_code": "CRL_04_02_01",
+              "depth3_name": "재심 및 비상상고"
+            },
+            {
+              "depth3_code": "CRL_04_02_02",
+              "depth3_name": "약식절차 및 즉결심판"
+            },
+            {
+              "depth3_code": "CRL_04_02_03",
+              "depth3_name": "배상명령절차"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

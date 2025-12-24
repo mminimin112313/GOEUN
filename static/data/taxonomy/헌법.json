@@ -1,0 +1,161 @@
+{
+  "subject": "헌법",
+  "categories": [
+    {
+      "depth1_code": "CON_01",
+      "depth1_name": "헌법총론",
+      "depth2_items": [
+        {
+          "depth2_code": "CON_01_01",
+          "depth2_name": "헌법의 일반이론",
+          "depth3_items": [
+            {
+              "depth3_code": "CON_01_01_01",
+              "depth3_name": "헌법의 의의 및 제정, 개정"
+            },
+            {
+              "depth3_code": "CON_01_01_02",
+              "depth3_name": "헌법의 수호와 변천"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CON_01_02",
+          "depth2_name": "대한민국 헌법총설",
+          "depth3_items": [
+            {
+              "depth3_code": "CON_01_02_01",
+              "depth3_name": "대한민국 국가의 구성요소"
+            },
+            {
+              "depth3_code": "CON_01_02_02",
+              "depth3_name": "헌법 전문 및 기본원리"
+            },
+            {
+              "depth3_code": "CON_01_02_03",
+              "depth3_name": "정당제도 및 선거제도"
+            },
+            {
+              "depth3_code": "CON_01_02_04",
+              "depth3_name": "공무원제도 및 지방자치제도"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CON_02",
+      "depth1_name": "기본권론",
+      "depth2_items": [
+        {
+          "depth2_code": "CON_02_01",
+          "depth2_name": "기본권 총론",
+          "depth3_items": [
+            {
+              "depth3_code": "CON_02_01_01",
+              "depth3_name": "기본권의 주체 및 효력"
+            },
+            {
+              "depth3_code": "CON_02_01_02",
+              "depth3_name": "기본권의 경합 및 충돌"
+            },
+            {
+              "depth3_code": "CON_02_01_03",
+              "depth3_name": "기본권의 제한 및 보장(과잉금지원칙)"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CON_02_02",
+          "depth2_name": "포괄적 기본권 및 자유권적 기본권",
+          "depth3_items": [
+            {
+              "depth3_code": "CON_02_02_01",
+              "depth3_name": "인간의 존엄과 가치 및 행복추구권"
+            },
+            {
+              "depth3_code": "CON_02_02_02",
+              "depth3_name": "평등권"
+            },
+            {
+              "depth3_code": "CON_02_02_03",
+              "depth3_name": "인신의 자유(신체의 자유)"
+            },
+            {
+              "depth3_code": "CON_02_02_04",
+              "depth3_name": "정신적 자유권(양심, 종교, 언론, 출판)"
+            },
+            {
+              "depth3_code": "CON_02_02_05",
+              "depth3_name": "사생활의 자유 및 경제적 자유권"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CON_02_03",
+          "depth2_name": "참정권, 사회적 기본권 및 청구권적 기본권",
+          "depth3_items": [
+            {
+              "depth3_code": "CON_02_03_01",
+              "depth3_name": "정치적 기본권"
+            },
+            {
+              "depth3_code": "CON_02_03_02",
+              "depth3_name": "청구권적 기본권(재판청구권 등)"
+            },
+            {
+              "depth3_code": "CON_02_03_03",
+              "depth3_name": "사회적 기본권(교육, 근로, 환경)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "depth1_code": "CON_03",
+      "depth1_name": "통치구조론 및 헌법재판",
+      "depth2_items": [
+        {
+          "depth2_code": "CON_03_01",
+          "depth2_name": "통치기구",
+          "depth3_items": [
+            {
+              "depth3_code": "CON_03_01_01",
+              "depth3_name": "국회(입법권 및 구성)"
+            },
+            {
+              "depth3_code": "CON_03_01_02",
+              "depth3_name": "대통령과 행정부"
+            },
+            {
+              "depth3_code": "CON_03_01_03",
+              "depth3_name": "법원(사법권)"
+            }
+          ]
+        },
+        {
+          "depth2_code": "CON_03_02",
+          "depth2_name": "헌법재판소",
+          "depth3_items": [
+            {
+              "depth3_code": "CON_03_02_01",
+              "depth3_name": "위헌법률심판"
+            },
+            {
+              "depth3_code": "CON_03_02_02",
+              "depth3_name": "헌법소원심판(권리구제형, 위헌심사형)"
+            },
+            {
+              "depth3_code": "CON_03_02_03",
+              "depth3_name": "권한쟁의심판"
+            },
+            {
+              "depth3_code": "CON_03_02_04",
+              "depth3_name": "탄핵심판 및 정당해산심판"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
