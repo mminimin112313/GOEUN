@@ -19,7 +19,7 @@ const config = {
 		}),
 		paths: {
 			// GitHub Pages repository name
-			base: process.argv.includes('dev') ? '' : '/gongmuwon_quiz'
+			base: process.argv.includes('dev') ? '' : '/GOEUN'
 		}
 	}
 };
