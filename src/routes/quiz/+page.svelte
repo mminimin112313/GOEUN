@@ -195,7 +195,7 @@
                             wrongCount: 1,
                             consecutiveCorrect: 0,
                             lastWrongDate: Date.now(),
-                            examInfo: {
+                            examInfo: q.examInfo || {
                                 category: $quizSession.config.category,
                                 round: $quizSession.config.round,
                             },

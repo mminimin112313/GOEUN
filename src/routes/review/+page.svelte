@@ -166,7 +166,9 @@
                             </p>
                             <div class="flex gap-2 mt-1">
                                 <span class="pixel-tag bg-gray-100 text-[9px]"
-                                    >{note.examInfo?.category || "N/A"}</span
+                                    >{note.examInfo?.examName ||
+                                        note.examInfo?.round ||
+                                        "Unknown"}</span
                                 >
                                 {#if !note.isGraduated}
                                     <span

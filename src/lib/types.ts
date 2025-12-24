@@ -93,6 +93,7 @@ export interface QuizRecord {
     timeTaken: number;
     questions: Question[];
     answers: Record<number, number>; // qIndex -> selectedOption (1-based)
+    memos?: Record<number, string>;  // qIndex -> memo text
     questionTimes?: number[];
 }
 
@@ -104,10 +105,6 @@ export interface WrongNote extends Question {
     lastReviewDate?: number;
     isGraduated?: boolean;
     memo?: string;
-    examInfo?: {
-        category: string;
-        round: string;
-    };
 }
 
 // ============ 게이미피케이션 ============
