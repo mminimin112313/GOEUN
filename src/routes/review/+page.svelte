@@ -4,7 +4,6 @@
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
     import {
-        Heart,
         Trash2,
         CheckCircle2,
         ChevronDown,
@@ -89,7 +88,7 @@
     <!-- Header -->
     <header class="retro-window">
         <div class="retro-header !bg-[#FF6666]">
-            <span>💔 WRONG_NOTES.db</span>
+            <span>📚 REVIEW_NOTES.db</span>
         </div>
         <div class="p-4 text-center bg-[#FFF0F0]">
             <h1 class="text-2xl font-pixel text-[#FF6666] animate-pulse">

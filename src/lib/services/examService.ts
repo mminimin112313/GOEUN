@@ -1,4 +1,5 @@
 import { base } from '$app/paths';
+import { taxonomyService } from './taxonomyService';
 
 export interface ExamQuestion {
     id: number;
@@ -30,7 +31,7 @@ export interface ExamRound {
             year: number;
             subject_category: string;
             questions: ExamQuestion[];
-        }; // Cache for loaded data
+        };
     }[];
 }
 
@@ -52,6 +53,9 @@ class ExamDataService {
         this.isLoading = true;
 
         try {
+            console.log('[ExamDataService] Initializing services...');
+            await taxonomyService.init();
+
             console.log('[ExamDataService] Loading exam index...');
             const indexRes = await fetch(`${base}/data/exam_index.json`);
             if (!indexRes.ok) throw new Error('Failed to load exam index');
@@ -62,10 +66,6 @@ class ExamDataService {
             const fetchPromises = examIndex.map(async (exam) => {
                 const subjectPromises = exam.subjects.map(async (subj) => {
                     try {
-                        // subj.path is relative to static, e.g. "data/exams/11회/공법.json"
-                        // we need to prepend base if strictly needed, but fetch usually handles relative to root if valid URL
-                        // However, static files are served at root or base. 
-                        // Let's assume subj.path starts with "data/...".
                         const path = subj.path.startsWith('/') ? subj.path.slice(1) : subj.path;
                         const validUrl = `${base}/${path}`;
 
@@ -86,7 +86,7 @@ class ExamDataService {
 
             this.exams = await Promise.all(fetchPromises);
             this.isLoaded = true;
-            console.log(`[ExamDataService] Loaded ${this.exams.length} exam rounds.`); // debug
+            console.log(`[ExamDataService] Loaded ${this.exams.length} exam rounds.`);
         } catch (e) {
             console.error('[ExamDataService] Initialization failed:', e);
         } finally {
@@ -109,7 +109,7 @@ class ExamDataService {
                         q.exam_year = round.year;
                         q.exam_type = round.type;
                         q.subject_category = subj.category;
-                        q.exam_title = round.exam_title; // or subj.data.exam_title
+                        q.exam_title = round.exam_title;
                         all.push(q);
                     });
                 }
@@ -125,6 +125,8 @@ class ExamDataService {
             const [start, end] = criteria.yearRange;
             questions = questions.filter(q => {
                 const y = parseInt(q.exam_year || '0');
+                // Ensure y is a number
+                if (isNaN(y)) return false;
                 return y >= start && y <= end;
             });
         }
@@ -138,9 +140,17 @@ class ExamDataService {
         }
 
         if (criteria.subjects && criteria.subjects.length > 0) {
+            // Smart Filtering: Expand selected codes to include all descendants
+            const expandedCodes = new Set<string>();
+            criteria.subjects.forEach(code => {
+                const descendants = taxonomyService.getDescendantCodes(code);
+                descendants.forEach(d => expandedCodes.add(d));
+            });
+
             questions = questions.filter(q => {
                 if (!q.subjects) return false;
-                return q.subjects.some(code => criteria.subjects!.includes(code));
+                // Check if any of the question's subjects match any of the expanded selected codes
+                return q.subjects.some(code => expandedCodes.has(code));
             });
         }
 

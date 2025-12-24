@@ -54,7 +54,12 @@ export async function loadMultipleExams(rounds: string[], category: string): Pro
                 // Inject exam info into each question
                 const qs = data.questions.map(q => ({
                     ...q,
-                    examInfo: { category, round: r }
+                    examInfo: {
+                        category,
+                        round: r,
+                        examName: data.exam_title,
+                        examYear: data.year
+                    }
                 }));
                 return { ...data, questions: qs };
             } catch (e) {

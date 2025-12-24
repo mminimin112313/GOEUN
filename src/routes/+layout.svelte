@@ -5,8 +5,8 @@
   import { authStore } from "$lib/stores/auth";
   import {
     Home,
-    Settings,
-    Heart,
+    PenTool,
+    BookOpen,
     History,
     HelpCircle,
     LogIn,
@@ -22,8 +22,8 @@
   // Navigation items
   const navItems = [
     { path: "/", icon: Home, label: "HOME" },
-    { path: "/settings", icon: Settings, label: "SETUP" },
-    { path: "/review", icon: Heart, label: "MEMO" },
+    { path: "/settings", icon: PenTool, label: "EXAM" },
+    { path: "/review", icon: BookOpen, label: "MEMO" },
     { path: "/history", icon: History, label: "LOGS" },
   ];
 

@@ -35,6 +35,16 @@ export function filterQuestions(examData: ExamData, config: QuizConfig): Questio
         );
     }
 
+    // 3. 회차(Round) 필터
+    // QuizConfig.selectedRounds가 존재하면, 해당 회차의 문제만 남김
+    // 단, selectedRounds가 비어있으면(전체 선택 의미일 수도 있으나) 안전하게 필터링 스킵 or 전체?
+    // 보통 settings에서 계산된 selectedRounds가 넘어옴.
+    if (config.selectedRounds && config.selectedRounds.length > 0) {
+        pool = pool.filter(q =>
+            q.examInfo?.round && config.selectedRounds.includes(q.examInfo.round)
+        );
+    }
+
     return pool;
 }
 

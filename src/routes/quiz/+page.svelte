@@ -138,6 +138,24 @@
             (Date.now() - lastQuestionTime) / 1000,
         );
 
+        // Detailed Logging per User Request
+        console.group("📝 EXAM SESSION LOG");
+        console.log(`🕒 Total Time: ${formatTime(elapsed)} (${elapsed}s)`);
+        console.log(`📅 Date: ${new Date().toLocaleString()}`);
+
+        questions.forEach((q, idx) => {
+            const time = questionTimes[idx] || 0;
+            const selected = answers[idx];
+            const isCorrect = isCorrectAnswer(q, selected);
+            const status = isCorrect ? "✅ CORRECT" : "❌ WRONG";
+            const source = `${q.examInfo?.round || "Unknown"} ${q.id}문`;
+
+            console.log(
+                `Q${idx + 1} [${source}] : ${time}s | ${status} | Subject: ${q.subjects.join(", ")}`,
+            );
+        });
+        console.groupEnd();
+
         const stats = calculateScore(questions, answers);
 
         const record: QuizRecord = {
@@ -242,12 +260,18 @@
                 <div class="flex items-center gap-2">
                     <span
                         class="truncate font-mono text-xs tracking-wider opacity-80"
-                        >SESSION_ID: {Date.now().toString().slice(-6)}</span
                     >
+                        {#if currentQuestion.examInfo}
+                            {currentQuestion.examInfo.round}
+                            {currentQuestion.id}문
+                        {:else}
+                            SESSION_ID: {Date.now().toString().slice(-6)}
+                        {/if}
+                    </span>
                 </div>
                 <div class="flex items-center gap-4">
                     <button
-                        class={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold transition-all border border-black ${drawMode ? "bg-[#FF66CC] text-white" : "bg-white hover:bg-gray-100"}`}
+                        class={`flex items-center gap-1.5 px-3 py-1 text-[10px] font-bold transition-all border border-black ${drawMode ? "!bg-[#FF66CC] !text-black shadow-inner" : "bg-white hover:bg-gray-100"}`}
                         on:click={() => (drawMode = !drawMode)}
                     >
                         <PenTool size={12} /> MEMO_MODE
@@ -312,7 +336,7 @@
                         >
                             <!-- Number Box -->
                             <div
-                                class="w-12 flex items-center justify-center border-r-2 border-black font-bold font-mono text-lg
+                                class="w-12 flex items-center justify-center border-r-2 border-black font-bold font-mono text-lg shrink-0
                                         {selectedAnswer === option.originalIndex
                                     ? 'bg-[#66CCFF] text-white'
                                     : 'bg-gray-100 text-gray-500 group-hover:bg-white'}"
@@ -321,7 +345,7 @@
                             </div>
                             <!-- Text -->
                             <div
-                                class="flex-1 p-4 text-sm leading-relaxed flex items-center"
+                                class="flex-1 p-4 text-base leading-relaxed flex items-center font-sans break-keep text-gray-800 tracking-tight"
                             >
                                 {option.text}
                             </div>

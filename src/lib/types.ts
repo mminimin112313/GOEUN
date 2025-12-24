@@ -48,6 +48,8 @@ export interface Question {
     examInfo?: {
         category: string;
         round: string;
+        examName?: string; // e.g. "제1회 변호사시험"
+        examYear?: string; // e.g. "2012"
     };
 }
 
@@ -62,8 +64,15 @@ export interface ExamData {
 
 export interface QuizConfig {
     category: string;           // '공법' | '민사법' | '형사법'
-    round: string;              // '1회' ~ '14회' (compatibility)
-    selectedRounds: string[];   // ['1회', '2회'] - 다중 선택
+
+    // New Range Filters
+    startYear: number;          // 2012 ~ 2024
+    endYear: number;
+    examTypes: string[];        // ['official', '6mo', '8mo', '10mo']
+
+    // Legacy (Computed from Range) - kept for compatibility if needed, but primary logic moves to range
+    selectedRounds: string[];   // ['1회', '2회'] - Computed
+
     selectedSubjects: string[]; // ['헌법', '행정법'] - 하위 과목 선택
     selectedCodes: string[];    // ['CON_01', 'ADM_02_01'] - 세부 분류 코드
     questionCount: number;

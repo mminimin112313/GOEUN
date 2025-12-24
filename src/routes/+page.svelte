@@ -16,7 +16,6 @@
         ChevronRight,
         Star,
         Zap,
-        Heart,
         MousePointer2,
         HelpCircle,
     } from "lucide-svelte";
@@ -259,7 +258,7 @@
     {#if wrongCount > 0}
         <section class="space-y-2">
             <h2 class="font-pixel text-lg flex items-center gap-2">
-                <Heart size={20} class="text-[#FF6666]" />
+                <BookOpen size={20} class="text-[#FF6666]" />
                 REVIEW
             </h2>
 

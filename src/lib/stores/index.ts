@@ -7,8 +7,10 @@ import { writable } from 'svelte/store';
 
 export const quizConfig = synced<QuizConfig>('quiz_config', 'config', {
     category: '공법',              // 공법/민사법/형사법
-    round: '1회',                  // 1회~12회
-    selectedRounds: ['1회'],       // Default to 1st
+    startYear: 2018,
+    endYear: 2024,
+    examTypes: ['official'],       // Default: 변호사시험 only
+    selectedRounds: [],            // Will be computed on load
     selectedSubjects: [],          // 하위 과목 ['헌법', '행정법']
     selectedCodes: [],             // 세부 분류 코드
     questionCount: 10,
