@@ -151,7 +151,7 @@
             const source = `${q.examInfo?.round || "Unknown"} ${q.id}문`;
 
             console.log(
-                `Q${idx + 1} [${source}] : ${time}s | ${status} | Subject: ${q.subjects.join(", ")}`,
+                `Q${idx + 1} [${source}] : ${time}s | ${status} | Marked: ${selected ?? "None"} | Subject: ${q.subjects.join(", ")}`,
             );
         });
         console.groupEnd();

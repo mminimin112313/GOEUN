@@ -488,7 +488,7 @@
             <!-- Question Count -->
             <div class="space-y-2">
                 <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-sm">QUESTIONS</h2>
+                    <h2 class="font-bold text-sm text-black">QUESTIONS</h2>
                     <span class="pixel-tag bg-[#FF66CC] text-white"
                         >{$quizConfig.questionCount}</span
                     >
@@ -499,7 +499,7 @@
                     max={validTotalCount > 0 ? validTotalCount : 50}
                     step="5"
                     bind:value={$quizConfig.questionCount}
-                    class="w-full h-4 bg-gray-200 rounded-none appearance-none border-2 border-black cursor-pointer accent-[#FF66CC]"
+                    class="w-full h-4 bg-gray-200 rounded-none appearance-none border-2 border-black cursor-pointer accent-[#FF66CC] relative z-10"
                 />
                 <div class="text-right text-[10px] text-gray-400 font-mono">
                     Pool Size: {validTotalCount} Q

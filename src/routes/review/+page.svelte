@@ -170,7 +170,7 @@
                                 >
                                 {#if !note.isGraduated}
                                     <span
-                                        class="pixel-tag bg-[#FF6666] text-white text-[9px]"
+                                        class="pixel-tag !bg-[#FF6666] !text-white text-[9px]"
                                         >Wrong x{note.wrongCount}</span
                                     >
                                 {/if}
@@ -240,7 +240,7 @@
                                     </button>
                                 {/if}
                                 <button
-                                    class="w-8 h-8 btn-retro bg-[#FF6666] text-white flex items-center justify-center p-0"
+                                    class="w-8 h-8 btn-retro !bg-[#FF6666] !text-white flex items-center justify-center p-0"
                                     on:click={() => removeNote(note)}
                                 >
                                     <Trash2 size={14} />
