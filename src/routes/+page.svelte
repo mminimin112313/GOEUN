@@ -251,7 +251,16 @@
                 <button
                     class="w-full retro-window p-0 hover:translate-x-1 transition-transform group text-left"
                     on:click={() => {
-                        $quizConfig.category = cat;
+                        $quizConfig = {
+                            ...$quizConfig,
+                            category: cat,
+                            questionCount: 20,
+                            startYear: 2020,
+                            endYear: 2024,
+                            selectedRounds: [],
+                            selectedSubjects: [],
+                            selectedCodes: [],
+                        };
                         goto("/settings");
                     }}
                 >
