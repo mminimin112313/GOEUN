@@ -3,6 +3,7 @@
     import { getCodePath } from "$lib/db";
     import { onMount } from "svelte";
     import { Trophy, ChevronDown, ChevronUp } from "lucide-svelte";
+    import { quizHistory, questionMemos } from "$lib/stores";
     import type { QuizRecord } from "$lib/types";
 
     export let record: QuizRecord;
@@ -38,6 +39,37 @@
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins}m ${secs}s`;
+    }
+
+    function updateMemo(idx: number, text: string) {
+        const questionId = record.questions[idx].id;
+
+        // 1. Update individual record (for immediate UI feedback in history view)
+        if (!record.memos) record.memos = {};
+        record.memos[idx] = text;
+
+        // 2. Update central questionMemos (for cross-sharing and review page)
+        if (!$questionMemos[questionId]) {
+            $questionMemos[questionId] = {
+                memo: text,
+                wrongCount: 0,
+                consecutiveCorrect: 0,
+            };
+        } else {
+            $questionMemos[questionId].memo = text;
+        }
+        $questionMemos = $questionMemos;
+
+        // 3. Persist individual record to history store
+        quizHistory.update((history) => {
+            const index = history.findIndex((h) => h.id === record.id);
+            if (index !== -1) {
+                const newHistory = [...history];
+                newHistory[index] = { ...record };
+                return newHistory;
+            }
+            return history;
+        });
     }
 
     $: correctCount = record.questions.filter((q, i) =>
@@ -151,9 +183,27 @@
                 </button>
 
                 {#if isExpanded}
+                    {@const sourceTitle =
+                        question.examInfo?.examName || question.exam_title}
+                    {@const sourceYear =
+                        question.examInfo?.examYear || question.exam_year}
                     <div
                         class="p-4 bg-gray-50 border-t-2 border-black text-sm space-y-4 shadow-inner"
                     >
+                        <!-- Source Info -->
+                        {#if sourceTitle || sourceYear}
+                            <div
+                                class="text-[10px] font-bold text-gray-400 flex items-center gap-2"
+                            >
+                                <span>📌</span>
+                                <span>
+                                    {sourceYear || ""}
+                                    {sourceTitle || "출처 불명"}
+                                    {#if question.id}#{question.id}{/if}
+                                </span>
+                            </div>
+                        {/if}
+
                         <div
                             class="font-bold text-gray-900 leading-relaxed font-sans text-base"
                         >
@@ -191,6 +241,27 @@
                                 </div>
                             {/each}
                         </div>
+
+                        <!-- Memo Section -->
+                        <div
+                            class="mt-4 pt-4 border-t border-dashed border-gray-400"
+                        >
+                            <label
+                                for={`memo-${idx}`}
+                                class="text-xs font-bold text-gray-500 mb-2 flex items-center gap-2"
+                            >
+                                📝 MEMO
+                            </label>
+                            <textarea
+                                id={`memo-${idx}`}
+                                class="w-full text-sm p-3 border border-gray-300 rounded focus:border-[#FF66CC] focus:ring-1 focus:ring-[#FF66CC] outline-none min-h-[80px]"
+                                placeholder="Write your analysis notes here..."
+                                value={record.memos?.[idx] || ""}
+                                on:input={(e) =>
+                                    updateMemo(idx, e.currentTarget.value)}
+                            ></textarea>
+                        </div>
+
                         <!-- Meta Info (Taxonomy) -->
                         {#if question.subjects && question.subjects.length > 0}
                             <div

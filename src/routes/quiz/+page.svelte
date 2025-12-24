@@ -1,5 +1,11 @@
 <script lang="ts">
-    import { quizSession, seenIds, quizHistory, wrongNotes } from "$lib/stores";
+    import {
+        quizSession,
+        seenIds,
+        quizHistory,
+        wrongNotes,
+        questionMemos,
+    } from "$lib/stores";
     import {
         filterQuestions,
         createSessionQuestions,
@@ -14,11 +20,13 @@
         Clock,
         Flag,
         BookOpen,
+        PenTool,
+        Eraser,
+        Settings,
     } from "lucide-svelte";
     import type { Question, QuizRecord } from "$lib/types";
     import TaxonomyBreadcrumb from "$lib/components/TaxonomyBreadcrumb.svelte";
     import QuizCanvas from "$lib/components/QuizCanvas.svelte";
-    import { PenTool } from "lucide-svelte";
 
     // Session state
     let questions: Question[] = [];
@@ -28,8 +36,12 @@
     let questionTimes: number[] = [];
     let lastQuestionTime = Date.now();
 
-    // Drawing Mode
-    let drawMode = false;
+    // Drawing Mode (default ON)
+    let drawMode = true;
+    let canvasRef: QuizCanvas | undefined;
+    let qDrawings: Record<number, string> = {}; // Drawing persistence per question
+    let strokeWidth = 2;
+    let isToolbarOpen = false;
 
     // Timer
     let elapsed = 0;
@@ -61,17 +73,23 @@
 
             const config = $quizSession.config;
             let pool = examDataService.filterQuestions({
+                yearRange: [config.startYear, config.endYear],
+                type:
+                    config.examTypes.length === 1 ? config.examTypes[0] : "all",
                 categories: config.category ? [config.category] : undefined,
                 subjects:
-                    config.selectedSubjects.length > 0
-                        ? config.selectedSubjects
-                        : undefined,
-                // Round filtering is complex across multiple files, let's assume 'selectedRounds' handled elsewhere or ignore for now if single round.
+                    config.selectedCodes.length > 0
+                        ? config.selectedCodes
+                        : config.selectedSubjects.length > 0
+                          ? config.selectedSubjects
+                          : undefined,
             });
 
-            // If round specific
-            if (config.round && config.round !== "RANDOM") {
-                pool = pool.filter((q) => q.exam_round === config.round);
+            // Additional type filter if multiple selected (since filterQuestions supports only one or 'all')
+            if (config.examTypes.length > 1) {
+                pool = pool.filter((q) =>
+                    config.examTypes.includes(q.exam_type as any),
+                );
             }
 
             // Create Session
@@ -109,10 +127,7 @@
     }
 
     function selectAnswer(optionIndex: number) {
-        if (drawMode) return; // Prevent answering while drawing? Or allow both? detailed req said "toggle". Usually better to separate.
-        // User didn't specify, but preventing accidental clicks is good.
-        // Actually, QuizCanvas has pointer-events-auto when enabled, so it blocks clicks anyway.
-
+        // drawMode 시에도 smart tap 기능을 통해 호출될 수 있도록 제한 제거
         const originalIndex =
             currentQuestion.displayOptions?.[optionIndex]?.originalIndex ||
             optionIndex + 1;
@@ -121,15 +136,47 @@
     }
 
     function goNext() {
+        // Save current drawing
+        if (canvasRef) {
+            qDrawings[currentIndex] = canvasRef.save();
+        }
+
         questionTimes[currentIndex] = Math.floor(
             (Date.now() - lastQuestionTime) / 1000,
         );
         lastQuestionTime = Date.now();
-        if (currentIndex < questions.length - 1) currentIndex++;
+        if (currentIndex < questions.length - 1) {
+            currentIndex++;
+
+            // Load next drawing (delayed to ensure DOM update)
+            setTimeout(() => {
+                if (canvasRef) {
+                    const saved = qDrawings[currentIndex];
+                    if (saved) canvasRef.load(saved);
+                    else canvasRef.clear();
+                }
+            }, 0);
+        }
     }
 
     function goPrev() {
-        if (currentIndex > 0) currentIndex--;
+        if (currentIndex > 0) {
+            // Save current drawing
+            if (canvasRef) {
+                qDrawings[currentIndex] = canvasRef.save();
+            }
+
+            currentIndex--;
+
+            // Load previous drawing
+            setTimeout(() => {
+                if (canvasRef) {
+                    const saved = qDrawings[currentIndex];
+                    if (saved) canvasRef.load(saved);
+                    else canvasRef.clear();
+                }
+            }, 0);
+        }
     }
 
     function handleSubmit() {
@@ -176,34 +223,35 @@
         const newSeenIds = questions.map((q) => String(q.id));
         $seenIds = [...new Set([...$seenIds, ...newSeenIds])];
 
-        // Wrong Note Logic
+        // Wrong Note Logic (Log-Based)
         questions.forEach((q, idx) => {
             const selected = answers[idx];
             if (selected === undefined || !isCorrectAnswer(q, selected)) {
-                // ... (existing logic omitted for brevity, logicEngine handles this anyway? No, locally here)
-                const existing = $wrongNotes.find((w) => w.id === q.id);
-                if (existing) {
-                    existing.wrongCount++;
-                    existing.consecutiveCorrect = 0;
-                    existing.lastWrongDate = Date.now();
+                // Update global question memos/stats
+                if (!$questionMemos[q.id]) {
+                    $questionMemos[q.id] = {
+                        memo: "",
+                        wrongCount: 1,
+                        lastWrongDate: Date.now(),
+                        consecutiveCorrect: 0,
+                        isGraduated: false,
+                    };
                 } else {
-                    $wrongNotes = [
-                        ...$wrongNotes,
-                        {
-                            ...q,
-                            timestamp: Date.now(),
-                            wrongCount: 1,
-                            consecutiveCorrect: 0,
-                            lastWrongDate: Date.now(),
-                            examInfo: q.examInfo || {
-                                category: $quizSession.config.category,
-                                round: $quizSession.config.round,
-                            },
-                        },
-                    ];
+                    $questionMemos[q.id].wrongCount++;
+                    $questionMemos[q.id].lastWrongDate = Date.now();
+                    $questionMemos[q.id].consecutiveCorrect = 0;
+                }
+            } else {
+                // Correct answer - handle graduation logic
+                if ($questionMemos[q.id]) {
+                    $questionMemos[q.id].consecutiveCorrect++;
+                    if ($questionMemos[q.id].consecutiveCorrect >= 3) {
+                        $questionMemos[q.id].isGraduated = true;
+                    }
                 }
             }
         });
+        $questionMemos = $questionMemos; // Trigger store update
 
         goto("/result");
     }
@@ -297,60 +345,69 @@
             <div
                 class="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar relative"
             >
-                <QuizCanvas enabled={drawMode} />
+                <div class="relative min-h-full">
+                    <QuizCanvas
+                        bind:this={canvasRef}
+                        enabled={drawMode}
+                        lineWidth={strokeWidth}
+                    />
 
-                <!-- Taxonomy Breadcrumb (New Feature) -->
-                <TaxonomyBreadcrumb codes={currentQuestion.subjects} />
+                    <!-- Taxonomy Breadcrumb (New Feature) -->
+                    <TaxonomyBreadcrumb codes={currentQuestion.subjects} />
 
-                <!-- Main Text -->
-                <div class="space-y-4">
-                    {#if currentQuestion.passage}
-                        <div
-                            class="p-4 bg-white border-2 border-black border-dashed font-serif text-sm leading-relaxed text-[#333]"
+                    <!-- Main Text -->
+                    <div class="space-y-4">
+                        <p
+                            class="font-bold text-lg leading-relaxed text-[#1a1a1a]"
                         >
-                            <div
-                                class="flex items-center gap-2 mb-2 font-bold text-gray-400 text-xs uppercase"
-                            >
-                                <BookOpen size={12} /> Passage
-                            </div>
-                            <p class="whitespace-pre-wrap">
-                                {currentQuestion.passage}
-                            </p>
-                        </div>
-                    {/if}
+                            {currentQuestion.question}
+                        </p>
 
-                    <p class="font-bold text-lg leading-relaxed text-[#1a1a1a]">
-                        {currentQuestion.question}
-                    </p>
-                </div>
+                        {#if currentQuestion.passage}
+                            <div
+                                class="p-4 bg-white border-2 border-black border-dashed font-serif text-sm leading-relaxed text-[#333]"
+                            >
+                                <div
+                                    class="flex items-center gap-2 mb-2 font-bold text-gray-400 text-xs uppercase"
+                                >
+                                    <BookOpen size={12} /> Passage
+                                </div>
+                                <p class="whitespace-pre-wrap">
+                                    {currentQuestion.passage}
+                                </p>
+                            </div>
+                        {/if}
+                    </div>
 
-                <!-- Options: Grid Layout -->
-                <div class="space-y-3">
-                    {#each currentQuestion.displayOptions || currentQuestion.options.map( (t, i) => ({ text: t, originalIndex: i + 1 }), ) as option, idx}
-                        <button
-                            class="w-full text-left p-0 btn-retro transition-all group flex items-stretch
-                                   {selectedAnswer === option.originalIndex
-                                ? '!bg-[#E6F7FF] !border-black !translate-x-[2px] !translate-y-[2px] !shadow-none'
-                                : 'hover:!bg-gray-50'}"
-                            on:click={() => selectAnswer(idx)}
-                        >
-                            <!-- Number Box -->
-                            <div
-                                class="w-12 flex items-center justify-center border-r-2 border-black font-bold font-mono text-lg shrink-0
-                                        {selectedAnswer === option.originalIndex
-                                    ? 'bg-[#66CCFF] text-white'
-                                    : 'bg-gray-100 text-gray-500 group-hover:bg-white'}"
+                    <!-- Options: Grid Layout -->
+                    <div class="space-y-3 mt-6">
+                        {#each currentQuestion.displayOptions || currentQuestion.options.map( (t, i) => ({ text: t, originalIndex: i + 1 }), ) as option, idx}
+                            <button
+                                class="w-full text-left p-0 btn-retro transition-all group flex items-stretch
+                                    {selectedAnswer === option.originalIndex
+                                    ? '!bg-[#E6F7FF] !border-black !translate-x-[2px] !translate-y-[2px] !shadow-none'
+                                    : 'hover:!bg-gray-50'}"
+                                on:click={() => selectAnswer(idx)}
                             >
-                                {idx + 1}
-                            </div>
-                            <!-- Text -->
-                            <div
-                                class="flex-1 p-4 text-base leading-relaxed flex items-center font-sans break-keep text-gray-800 tracking-tight"
-                            >
-                                {option.text}
-                            </div>
-                        </button>
-                    {/each}
+                                <!-- Number Box -->
+                                <div
+                                    class="w-12 flex items-center justify-center border-r-2 border-black font-bold font-mono text-lg shrink-0
+                                            {selectedAnswer ===
+                                    option.originalIndex
+                                        ? 'bg-[#66CCFF] text-white'
+                                        : 'bg-gray-100 text-gray-500 group-hover:bg-white'}"
+                                >
+                                    {idx + 1}
+                                </div>
+                                <!-- Text -->
+                                <div
+                                    class="flex-1 p-4 text-base leading-relaxed flex items-center font-sans break-keep text-gray-800 tracking-tight"
+                                >
+                                    {option.text}
+                                </div>
+                            </button>
+                        {/each}
+                    </div>
                 </div>
             </div>
 

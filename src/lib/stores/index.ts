@@ -1,6 +1,6 @@
 import { persisted } from './persistence';
 import { synced } from './synced';
-import type { QuizConfig, QuizRecord, WrongNote } from '../types';
+import type { QuizConfig, QuizRecord, WrongNote, QuestionMemos } from '../types';
 import { writable } from 'svelte/store';
 
 // synced( localStorageKey, firestoreDocId, initialValue )
@@ -21,6 +21,8 @@ export const quizConfig = synced<QuizConfig>('quiz_config', 'config', {
 export const quizHistory = synced<QuizRecord[]>('quiz_history', 'history', []);
 
 export const wrongNotes = synced<WrongNote[]>('quiz_wrong_notes', 'wrong_notes', []);
+
+export const questionMemos = synced<QuestionMemos>('quiz_question_memos', 'question_memos', {});
 
 export const seenIds = synced<string[]>('quiz_seen_ids', 'seen_ids', []);
 

@@ -30,16 +30,38 @@
         });
     }
 
+    // Custom Confirmation Modal State
+    let showConfirmModal = false;
+    let confirmMessage = "";
+    let confirmAction: (() => void) | null = null;
+
+    function openConfirmModal(message: string, action: () => void) {
+        confirmMessage = message;
+        confirmAction = action;
+        showConfirmModal = true;
+    }
+
+    function handleConfirm() {
+        if (confirmAction) confirmAction();
+        showConfirmModal = false;
+        confirmAction = null;
+    }
+
+    function handleCancel() {
+        showConfirmModal = false;
+        confirmAction = null;
+    }
+
     function deleteRecord(record: QuizRecord) {
-        if (confirm("DELETE THIS RECORD?")) {
+        openConfirmModal("DELETE THIS RECORD?", () => {
             $quizHistory = $quizHistory.filter((r) => r.id !== record.id);
-        }
+        });
     }
 
     function clearAllHistory() {
-        if (confirm("WARNING: DELETE ALL HISTORY?")) {
+        openConfirmModal("WARNING: DELETE ALL HISTORY?", () => {
             $quizHistory = [];
-        }
+        });
     }
 
     // Sort by timestamp descending
@@ -246,3 +268,37 @@
         {/if}
     </section>
 </div>
+
+<!-- Custom Confirmation Modal -->
+{#if showConfirmModal}
+    <div
+        class="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+        on:click|self={handleCancel}
+        role="dialog"
+        aria-modal="true"
+    >
+        <div class="retro-window bg-white max-w-sm mx-4">
+            <div class="retro-header !bg-[#FF6B6B] !text-white">
+                <span>⚠️ CONFIRM.exe</span>
+            </div>
+            <div class="p-6 text-center">
+                <div class="text-4xl mb-4">🗑️</div>
+                <p class="font-bold text-sm mb-6">{confirmMessage}</p>
+                <div class="flex gap-3 justify-center">
+                    <button
+                        class="px-4 py-2 bg-gray-200 hover:bg-gray-300 font-bold text-xs border-2 border-black transition-colors"
+                        on:click={handleCancel}
+                    >
+                        CANCEL
+                    </button>
+                    <button
+                        class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white font-bold text-xs border-2 border-black transition-colors"
+                        on:click={handleConfirm}
+                    >
+                        DELETE
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+{/if}

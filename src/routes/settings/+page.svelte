@@ -1,6 +1,6 @@
 <script lang="ts">
     import { quizConfig, quizSession, seenIds } from "$lib/stores";
-    import { CATEGORY_MAP } from "$lib/config";
+    import { CATEGORY_MAP, SUBJECT_CODE_MAP } from "$lib/config";
     import { loadMultipleExams } from "$lib/db";
     import {
         getFlatTaxonomyForCategory,
@@ -40,7 +40,28 @@
     // Local State for Range (synced with store on change)
     let localStartYear = $quizConfig.startYear;
     let localEndYear = $quizConfig.endYear;
+    let sliderPriority: "start" | "end" = "start";
+    let sliderContainer: HTMLElement;
 
+    function handleSliderMouseMove(e: MouseEvent | TouchEvent) {
+        if (!sliderContainer || availableYears.length < 2) return;
+
+        const rect = sliderContainer.getBoundingClientRect();
+        const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+        const x = (clientX - rect.left) / rect.width; // 0 to 1
+
+        const minYear = availableYears[0];
+        const maxYear = availableYears[availableYears.length - 1];
+        const range = maxYear - minYear;
+
+        const startPos = (localStartYear - minYear) / range;
+        const endPos = (localEndYear - minYear) / range;
+
+        const distStart = Math.abs(x - startPos);
+        const distEnd = Math.abs(x - endPos);
+
+        sliderPriority = distStart < distEnd ? "start" : "end";
+    }
     // Taxonomy Counts State
     let taxonomyCounts: Record<string, number> = {};
 
@@ -258,27 +279,61 @@
     $: totalQuestionsInScope = Object.values(taxonomyCounts).reduce(
         (a, b) => a + b,
         0,
-    ); // Rough estimate, actually counts are per code.
-    // Better total count: sum of root nodes
+    );
+
+    // Accurate Total Count based on selections
     $: validTotalCount = (() => {
-        if (!taxonomyNodes.length && !showAdvanced) return 0; // If nodes not loaded, we can't acceptably sum.
-        // Fallback: sum of category counts in examIndex
-        // Reuse logic from previous implementation if robust
-        // Or just use 'maxQuestions' logic
+        if (!examIndex.length) return 0;
+
         let count = 0;
-        if (examIndex.length > 0) {
-            const relevantRounds = examIndex.filter((e) =>
-                $quizConfig.selectedRounds.includes(e.round),
+        const sYear = Number(localStartYear);
+        const eYear = Number(localEndYear);
+
+        const relevantRounds = examIndex.filter((e) =>
+            ($quizConfig.selectedRounds || []).includes(e.round),
+        );
+
+        relevantRounds.forEach((r) => {
+            const subjectData = r.subjects.find(
+                (s: any) => s.category === $quizConfig.category,
             );
-            relevantRounds.forEach((r) => {
-                const subjectData = r.subjects.find(
-                    (s: any) => s.category === $quizConfig.category,
-                );
-                if (subjectData) count += subjectData.questionCount;
-            });
-        }
-        return count;
+            if (!subjectData) return;
+
+            if ($quizConfig.selectedCodes.length > 0) {
+                // If specific taxonomy codes are selected (Advanced Filter)
+                $quizConfig.selectedCodes.forEach((code) => {
+                    const val = subjectData.taxonomy_stats?.[code];
+                    if (val !== undefined) count += Number(val);
+                });
+            } else if ($quizConfig.selectedSubjects.length > 0) {
+                // If only subjects are selected
+                $quizConfig.selectedSubjects.forEach((subj) => {
+                    const prefix = SUBJECT_CODE_MAP[subj];
+                    if (prefix && subjectData.taxonomy_stats) {
+                        const subjCount = Object.entries(
+                            subjectData.taxonomy_stats,
+                        )
+                            .filter(([code]) => code.startsWith(prefix))
+                            .reduce((sum, [_, v]) => sum + Number(v), 0);
+                        count += subjCount;
+                    }
+                });
+            } else {
+                // Default: Full category count
+                count += Number(subjectData.questionCount || 0);
+            }
+        });
+        return Math.floor(count);
     })();
+
+    // Clamp questionCount to validTotalCount
+    $: if (validTotalCount > 0 && $quizConfig.questionCount > validTotalCount) {
+        $quizConfig.questionCount = validTotalCount;
+    }
+
+    function selectQuickCount(n: number) {
+        $quizConfig.questionCount = Math.min(n, validTotalCount || 1000);
+    }
 </script>
 
 <div class="min-h-screen p-6 pb-32 space-y-8">
@@ -375,7 +430,12 @@
                     </span>
                 </div>
 
-                <div class="px-2 pt-4 pb-2 relative h-8">
+                <div
+                    class="px-2 pt-4 pb-2 relative h-8"
+                    bind:this={sliderContainer}
+                    on:mousemove={handleSliderMouseMove}
+                    on:touchstart={handleSliderMouseMove}
+                >
                     {#if availableYears.length > 0}
                         <!-- Dual Thumb Slider Simulation -->
                         <input
@@ -387,7 +447,13 @@
                                 if (localStartYear > localEndYear)
                                     localStartYear = localEndYear;
                             }}
-                            class="absolute w-full z-20 opacity-0 cursor-pointer pointer-events-none"
+                            class="absolute w-full h-8 appearance-none bg-transparent cursor-pointer range-input-fix"
+                            style="z-index: {sliderPriority === 'start'
+                                ? 45
+                                : 40}; pointer-events: {sliderPriority ===
+                            'start'
+                                ? 'auto'
+                                : 'none'}"
                         />
                         <input
                             type="range"
@@ -398,7 +464,12 @@
                                 if (localEndYear < localStartYear)
                                     localEndYear = localStartYear;
                             }}
-                            class="absolute w-full z-20 opacity-0 cursor-pointer pointer-events-none"
+                            class="absolute w-full h-8 appearance-none bg-transparent cursor-pointer range-input-fix"
+                            style="z-index: {sliderPriority === 'end'
+                                ? 45
+                                : 40}; pointer-events: {sliderPriority === 'end'
+                                ? 'auto'
+                                : 'none'}"
                         />
 
                         <!-- Visual Track -->
@@ -485,24 +556,81 @@
                 </div>
             </div>
 
-            <!-- Question Count -->
-            <div class="space-y-2">
+            <!-- Question Count Selection (Redesigned) -->
+            <div class="space-y-4 pt-2">
                 <div class="flex items-center justify-between">
-                    <h2 class="font-bold text-sm text-black">QUESTIONS</h2>
-                    <span class="pixel-tag bg-[#FF66CC] text-white"
-                        >{$quizConfig.questionCount}</span
-                    >
+                    <h2 class="font-bold text-sm flex items-center gap-2">
+                        <Zap size={16} /> QUESTIONS
+                    </h2>
+                    <div class="flex items-center gap-2">
+                        <span
+                            class="font-mono text-lg font-black italic text-[#FF66CC]"
+                        >
+                            {$quizConfig.questionCount}
+                        </span>
+                        <span class="text-[10px] text-gray-400 font-mono">
+                            / {validTotalCount}
+                        </span>
+                    </div>
                 </div>
-                <input
-                    type="range"
-                    min="5"
-                    max={validTotalCount > 0 ? validTotalCount : 50}
-                    step="5"
-                    bind:value={$quizConfig.questionCount}
-                    class="w-full h-4 bg-gray-200 rounded-none appearance-none border-2 border-black cursor-pointer accent-[#FF66CC] relative z-10"
-                />
-                <div class="text-right text-[10px] text-gray-400 font-mono">
-                    Pool Size: {validTotalCount} Q
+
+                <div class="relative h-6 flex items-center group">
+                    <!-- Custom Slider Track -->
+                    <div
+                        class="absolute w-full h-1.5 bg-gray-100 rounded-full border border-black overflow-hidden"
+                    >
+                        <div
+                            class="h-full bg-[#FF66CC]"
+                            style="width: {($quizConfig.questionCount /
+                                (validTotalCount || 1)) *
+                                100}%"
+                        ></div>
+                    </div>
+
+                    <input
+                        type="range"
+                        min="1"
+                        max={validTotalCount > 0 ? validTotalCount : 100}
+                        step="1"
+                        bind:value={$quizConfig.questionCount}
+                        class="absolute w-full h-full opacity-0 cursor-pointer z-20"
+                    />
+
+                    <!-- Custom Thumb handle (visual only) -->
+                    <div
+                        class="absolute w-4 h-6 bg-white border-2 border-black shadow-[2px_2px_0px_rgba(0,0,0,0.5)] flex items-center justify-center pointer-events-none transform -translate-x-1/2"
+                        style="left: {($quizConfig.questionCount /
+                            (validTotalCount || 1)) *
+                            100}%"
+                    >
+                        <div class="w-0.5 h-3 bg-[#FF66CC]"></div>
+                    </div>
+                </div>
+
+                <!-- Quick Selection Buttons -->
+                <div
+                    class="flex justify-between gap-1 overflow-x-auto pb-1 no-scrollbar"
+                >
+                    {#each [5, 10, 20, 40, 100] as n}
+                        <button
+                            class="px-2 py-1 text-[10px] font-bold border border-black transition-all
+                                   {n <= (validTotalCount || 0)
+                                ? 'bg-white hover:bg-[#FFECF5]'
+                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'}"
+                            on:click={() => selectQuickCount(n)}
+                            disabled={n > (validTotalCount || 0)}
+                        >
+                            {n}Q
+                        </button>
+                    {/each}
+                    <button
+                        class="flex-1 px-2 py-1 text-[10px] font-bold border border-black bg-[#FFECF5] hover:bg-[#FFD9EA] transition-all"
+                        on:click={() =>
+                            ($quizConfig.questionCount = validTotalCount)}
+                        disabled={!validTotalCount}
+                    >
+                        ALL ({validTotalCount})
+                    </button>
                 </div>
             </div>
 
@@ -620,22 +748,32 @@
 
 <style>
     /* Slider Customization */
+    .range-input-fix {
+        height: 32px; /* Set explicit height for interaction area */
+        margin: 0;
+        top: 0;
+        left: 0;
+    }
+
     input[type="range"]::-webkit-slider-thumb {
         -webkit-appearance: none;
         pointer-events: auto; /* Allow dragging */
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 32px;
         background: transparent;
         cursor: pointer;
-        border-radius: 50%; /* Improve touch targeting */
+        position: relative;
+        z-index: 50;
     }
 
     input[type="range"]::-moz-range-thumb {
         pointer-events: auto;
-        width: 20px;
-        height: 20px;
+        width: 24px;
+        height: 32px;
         background: transparent;
         cursor: pointer;
         border: none;
+        position: relative;
+        z-index: 50;
     }
 </style>

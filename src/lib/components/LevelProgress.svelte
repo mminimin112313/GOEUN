@@ -1,11 +1,7 @@
 <script lang="ts">
     import { isMissionBoardOpen } from "$lib/stores/ui";
     import { missionStore } from "$lib/stores";
-    import {
-        getLevelInfo,
-        getNextLevelInfo,
-        LEVELS,
-    } from "$lib/logic/missions";
+    import { getLevelInfo, getNextLevelInfo } from "$lib/logic/missions";
     import { Sparkles, Zap } from "lucide-svelte";
 
     $: currentXp = $missionStore.totalXp;

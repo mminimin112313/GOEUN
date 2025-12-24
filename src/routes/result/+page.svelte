@@ -1,6 +1,7 @@
 <script lang="ts">
     import { quizHistory } from "$lib/stores";
     import { goto } from "$app/navigation";
+    import { page } from "$app/stores";
     import { onMount } from "svelte";
     import { RotateCcw, Home } from "lucide-svelte";
     import type { QuizRecord } from "$lib/types";
@@ -8,13 +9,44 @@
     import ExamReport from "$lib/components/ExamReport.svelte";
 
     let record: QuizRecord | null = null;
+    let isLoading = true;
+
+    // Reactive check for ID loading
+    $: {
+        const idParam = $page.url.searchParams.get("id");
+        if (idParam) {
+            const id = parseInt(idParam);
+            const found = $quizHistory.find((h) => h.id === id);
+            if (found) {
+                record = found;
+                isLoading = false;
+            }
+        }
+    }
 
     onMount(() => {
-        if ($quizHistory.length > 0) {
-            record = $quizHistory[$quizHistory.length - 1];
-        } else {
-            goto("/");
-        }
+        // Fallback for direct access without ID (Last Session)
+        // Or timeout if ID provided but not found
+        const timer = setTimeout(() => {
+            if (!record) {
+                const idParam = $page.url.searchParams.get("id");
+                if (!idParam && $quizHistory.length > 0) {
+                    record = $quizHistory[$quizHistory.length - 1];
+                    isLoading = false;
+                } else if (!idParam) {
+                    // No ID and no history
+                    goto("/");
+                } else {
+                    // ID provided but not found after timeout
+                    isLoading = false; // Will show "Loading Result" ... wait, we need 'Record Not Found' equivalent state or just alert
+                    if (!record) {
+                        alert("기록을 찾을 수 없습니다.");
+                        goto("/");
+                    }
+                }
+            }
+        }, 1000);
+        return () => clearTimeout(timer);
     });
 </script>
 

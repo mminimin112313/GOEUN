@@ -6,7 +6,7 @@ import type { Question, QuizConfig, ExamData } from '../types';
 import { matchesSelectedCodes } from '../db/taxonomy';
 import { CATEGORY_MAP, SUBJECT_CODE_MAP } from '../config';
 import { missionStore } from '../stores';
-import { XP_REWARDS } from './missions';
+import { getScaledXpRewards, getLevelInfo } from './missions';
 import { get } from 'svelte/store';
 
 /**
@@ -104,12 +104,12 @@ export function isCorrectAnswer(question: Question, selectedIndex: number): bool
 }
 
 /**
- * 문제 통계 계산 및 XP 지급
+ * 문제 통계 계산 및 XP 지급 (2차함수 스케일링 적용)
  */
 export function calculateScore(
     questions: Question[],
     answers: Record<number, number>
-): { correct: number; total: number; percentage: number } {
+): { correct: number; total: number; percentage: number; earnedXp: number } {
     let correct = 0;
 
     questions.forEach((q, idx) => {
@@ -119,15 +119,16 @@ export function calculateScore(
         }
     });
 
-    // XP 지급 로직
+    // XP 지급 로직 (레벨 기반 2차함수 스케일링)
     const store = get(missionStore);
-    let earnedXp = correct * XP_REWARDS.CORRECT_ANSWER;
+    const currentLevel = getLevelInfo(store.totalXp).level;
+    const rewards = getScaledXpRewards(currentLevel);
 
-    // 보너스: 다 맞으면 100XP, 그냥 완료하면 50XP
+    let earnedXp = correct * rewards.CORRECT_ANSWER;
+
+    // 보너스: 다 맞으면 퍼펙트 보너스
     if (correct === questions.length && questions.length > 0) {
-        earnedXp += XP_REWARDS.PERFECT_SCORE;
-    } else if (questions.length > 0) {
-        earnedXp += XP_REWARDS.COMPLETE_QUIZ;
+        earnedXp += rewards.PERFECT_SCORE;
     }
 
     // 스토어 업데이트
@@ -142,6 +143,7 @@ export function calculateScore(
         total: questions.length,
         percentage: questions.length > 0
             ? Math.round((correct / questions.length) * 100)
-            : 0
+            : 0,
+        earnedXp
     };
 }

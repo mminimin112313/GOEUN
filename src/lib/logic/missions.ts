@@ -13,79 +13,111 @@ export interface LevelInfo {
     description: string;
 }
 
-// 8 Stages: 로1-1 ~ 변호사
-export const LEVELS: LevelInfo[] = [
+// 10 Stages Configuration
+const STAGES = [
     {
-        level: 1,
-        title: '로스쿨 1-1',
-        xpRequired: 0,
-        characterImage: '/assets/chars/level1_sprite_3x3.png',
-        description: '법학의 세계에 오신 것을 환영합니다! 🐣'
+        name: "로스쿨 신입생",
+        image: "/assets/chars/level1_sprite_3x3.png",
+        desc: "법학의 세계에 오신 것을 환영합니다! 🐣"
     },
     {
-        level: 2,
-        title: '로스쿨 1-2',
-        xpRequired: 100,
-        characterImage: '/assets/chars/level1_sprite_3x3.png',
-        description: '민법총칙이 조금씩 이해되기 시작했어요.'
+        name: "민법총칙 마스터", // Lv 11
+        image: "/assets/chars/level1_sprite_3x3.png",
+        desc: "민법의 기초를 다졌습니다."
     },
     {
-        level: 3,
-        title: '로스쿨 2-1',
-        xpRequired: 300,
-        characterImage: '/assets/chars/level2_sprite_3x3.png',
-        description: '판례 암기의 늪에 빠지셨군요... 🔥'
+        name: "판례 수집가",   // Lv 21
+        image: "/assets/chars/level1_sprite_3x3.png",
+        desc: "판례가 머릿속에 쌓이고 있어요."
     },
     {
-        level: 4,
-        title: '로스쿨 2-2',
-        xpRequired: 600,
-        characterImage: '/assets/chars/level2_sprite_3x3.png',
-        description: '형사소송법이 눈에 들어오기 시작합니다.'
+        name: "형법 전문가",     // Lv 31
+        image: "/assets/chars/level1_sprite_3x3.png", // Missing asset fallback
+        desc: "범죄와 형벌을 꿰뚫어봅니다."
     },
     {
-        level: 5,
-        title: '로스쿨 3-1',
-        xpRequired: 1000,
-        characterImage: '/assets/chars/level2_sprite_3x3.png',
-        description: '이제 실전입니다. 기록형 모의고사를 준비하세요!'
+        name: "모의고사 랭커",   // Lv 41
+        image: "/assets/chars/level4_sprite_3x3.png", // Using available asset
+        desc: "실전 감각이 최고조에 달했습니다!"
     },
     {
-        level: 6,
-        title: '로스쿨 3-2',
-        xpRequired: 1500,
-        characterImage: '/assets/chars/level2_sprite_3x3.png',
-        description: '졸업시험 통과! 변호사시험이 코앞입니다.'
+        name: "졸업시험 합격자", // Lv 51
+        image: "/assets/chars/level4_sprite_3x3.png",
+        desc: "이제 변호사시험만 남았습니다."
     },
     {
-        level: 7,
-        title: '시험임박',
-        xpRequired: 2200,
-        characterImage: '/assets/chars/level3_sprite_3x3.png',
-        description: '🔥 불타오르는 합격의 의지! 마지막 스퍼트!'
+        name: "변호사시험 응시생", // Lv 61
+        image: "/assets/chars/level4_sprite_3x3.png",
+        desc: "떨리는 마음으로 시험장에 입장합니다."
     },
     {
-        level: 8,
-        title: '변호사',
-        xpRequired: 3000,
-        characterImage: '/assets/chars/level4_sprite_3x3.png',
-        description: '축하합니다! 정의의 수호자가 되셨습니다. ⚖️'
+        name: "수습 변호사",    // Lv 71
+        image: "/assets/chars/level4_sprite_3x3.png",
+        desc: "실무의 세계는 냉혹하군요."
+    },
+    {
+        name: "파트너 변호사",  // Lv 81
+        image: "/assets/chars/level4_sprite_3x3.png",
+        desc: "로펌의 주축이 되었습니다."
+    },
+    {
+        name: "대법관",        // Lv 91~100
+        image: "/assets/chars/level4_sprite_3x3.png",
+        desc: "법의 정점에 도달하셨습니다. ⚖️"
     }
 ];
 
+// XP Curve Constant
+// XP required for level L = BASE_XP * L * (L - 1)
+// Adjust BASE_XP to control difficulty.
+// If BASE_XP = 50:
+// Lv 2: 50 * 2 * 1 = 100 XP
+// Lv 10: 50 * 10 * 9 = 4500 XP
+// Lv 100: 50 * 100 * 99 = 495,000 XP
+const BASE_XP = 50;
+
+export function getXpForLevel(level: number): number {
+    if (level <= 1) return 0;
+    return BASE_XP * level * (level - 1);
+}
+
 export function getLevelInfo(xp: number): LevelInfo {
-    // Find the highest level where xp >= required
-    for (let i = LEVELS.length - 1; i >= 0; i--) {
-        if (xp >= LEVELS[i].xpRequired) {
-            return LEVELS[i];
-        }
-    }
-    return LEVELS[0];
+    // 1. Calculate Level from XP
+    // XP = 50 * L * (L - 1)  =>  XP/50 = L^2 - L  => L^2 - L - (XP/50) = 0
+    // L = (1 + sqrt(1 + 4 * (XP/50))) / 2
+    let level = Math.floor((1 + Math.sqrt(1 + 4 * (xp / BASE_XP))) / 2);
+
+    // Clamp level
+    if (level < 1) level = 1;
+    if (level > 100) level = 100;
+
+    // 2. Determine Stage (1-10)
+    // Stage 0: 1-10, Stage 1: 11-20, ...
+    const stageIndex = Math.floor((level - 1) / 10);
+    const stage = STAGES[Math.min(stageIndex, STAGES.length - 1)];
+
+    return {
+        level,
+        title: stage.name,
+        xpRequired: getXpForLevel(level),
+        characterImage: stage.image,
+        description: stage.desc
+    };
 }
 
 export function getNextLevelInfo(currentLevel: number): LevelInfo | null {
-    if (currentLevel >= LEVELS.length) return null;
-    return LEVELS[currentLevel]; // indexing works because level is 1-based, array is 0-based
+    if (currentLevel >= 100) return null;
+    const nextLevel = currentLevel + 1;
+    const stageIndex = Math.floor((nextLevel - 1) / 10);
+    const stage = STAGES[Math.min(stageIndex, STAGES.length - 1)];
+
+    return {
+        level: nextLevel,
+        title: stage.name, // Usually same title unless crossing stage boundary
+        xpRequired: getXpForLevel(nextLevel),
+        characterImage: stage.image,
+        description: stage.desc
+    };
 }
 
 export function getInitialMissionState(): MissionState {
@@ -99,10 +131,35 @@ export function getInitialMissionState(): MissionState {
     };
 }
 
-// XP rewards
+// Base XP rewards (will be multiplied by level multiplier)
 export const XP_REWARDS = {
-    CORRECT_ANSWER: 10,
-    COMPLETE_QUIZ: 50,
-    PERFECT_SCORE: 100,
-    DAILY_GOAL: 200
+    CORRECT_ANSWER: 10,   // Base XP per correct answer
+    COMPLETE_QUIZ: 50,    // Base completion bonus
+    PERFECT_SCORE: 100,   // Base perfect score bonus
+    DAILY_GOAL: 150       // Base daily goal bonus
 };
+
+/**
+ * Calculate XP reward with quadratic scaling based on current level
+ * Formula: baseXP * (1 + level^2 / 500)
+ * - Level 1: multiplier = 1.002 (almost no boost)
+ * - Level 10: multiplier = 1.2 (20% boost)
+ * - Level 50: multiplier = 6 (6x boost)
+ * - Level 100: multiplier = 21 (21x boost)
+ */
+export function getXpReward(baseXp: number, currentLevel: number): number {
+    const multiplier = 1 + (currentLevel * currentLevel) / 500;
+    return Math.round(baseXp * multiplier);
+}
+
+/**
+ * Get XP rewards scaled to current level
+ */
+export function getScaledXpRewards(currentLevel: number) {
+    return {
+        CORRECT_ANSWER: getXpReward(XP_REWARDS.CORRECT_ANSWER, currentLevel),
+        COMPLETE_QUIZ: getXpReward(XP_REWARDS.COMPLETE_QUIZ, currentLevel),
+        PERFECT_SCORE: getXpReward(XP_REWARDS.PERFECT_SCORE, currentLevel),
+        DAILY_GOAL: getXpReward(XP_REWARDS.DAILY_GOAL, currentLevel)
+    };
+}

@@ -1,169 +1,274 @@
 <script lang="ts">
-    import { onMount, tick } from "svelte";
-    import { PenTool, Eraser, Trash2, X } from "lucide-svelte";
-    import { fade, fly } from "svelte/transition";
+    import { onMount } from "svelte";
 
+    export let color = "#ef4444"; // Red-500
+    export let lineWidth = 3;
     export let enabled = false;
-    export let strokeColor = "#FF0000"; // Red pen by default
-    export let strokeWidth = 2;
 
     let canvas: HTMLCanvasElement;
-    let ctx: CanvasRenderingContext2D | null = null;
-    let isDrawing = false;
-    let lastX = 0;
-    let lastY = 0;
-    let container: HTMLElement | null = null;
+    let ctx: CanvasRenderingContext2D | null;
+    let scrollZone: HTMLDivElement;
 
-    // Tools
-    let tool: "pen" | "eraser" = "pen";
+    // Pointer State
+    let activePointers = new Map<number, { x: number; y: number }>();
+    let startX = 0;
+    let startY = 0;
+    let startTime = 0;
+    let isDrawing = false;
+    let isInScrollZone = false;
+    let points: { x: number; y: number }[] = [];
+
+    // Constants
+    const TAP_TIMEOUT = 500; // ms
+    const TAP_DISTANCE = 15; // px
+    const DRAW_THRESHOLD = 10; // px to engage drawing
+
+    // Resize Observer
+    let resizeObserver: ResizeObserver;
 
     onMount(() => {
-        // Find parent container to attach to (assuming parent has relative position)
-        container = canvas.parentElement;
-        if (container) {
-            resizeCanvas();
-            const resizeObserver = new ResizeObserver(() => resizeCanvas());
-            resizeObserver.observe(container);
+        ctx = canvas.getContext("2d");
+        if (!ctx) return;
 
-            return () => resizeObserver.disconnect();
-        }
+        resize();
+
+        resizeObserver = new ResizeObserver(() => resize());
+        resizeObserver.observe(canvas.parentElement || document.body);
+
+        return () => resizeObserver.disconnect();
     });
 
-    function resizeCanvas() {
-        if (!canvas || !container) return;
-        // Match the scroll dimensions of the container
-        canvas.width = container.scrollWidth;
-        canvas.height = container.scrollHeight;
+    function resize() {
+        if (!canvas || !canvas.parentElement) return;
+        const parent = canvas.parentElement;
 
-        // Re-setup context after resize (it resets)
+        const dpr = window.devicePixelRatio || 1;
+
+        // Use scrollHeight to cover the entire scrollable content area
+        canvas.width = parent.offsetWidth * dpr;
+        canvas.height = parent.scrollHeight * dpr;
+
+        canvas.style.width = `${parent.offsetWidth}px`;
+        canvas.style.height = `${parent.scrollHeight}px`;
+
         if (ctx) {
+            ctx.scale(dpr, dpr);
             ctx.lineCap = "round";
             ctx.lineJoin = "round";
-            ctx.strokeStyle = tool === "eraser" ? "#ffffff" : strokeColor; // Eraser acts as white out? Or composite operation?
-            ctx.lineWidth = strokeWidth;
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
         }
     }
 
-    function getCoords(e: MouseEvent | TouchEvent) {
-        if (!canvas) return { x: 0, y: 0 };
-        const rect = canvas.getBoundingClientRect();
+    $: if (ctx) {
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineWidth;
+    }
 
-        let clientX, clientY;
-        if (window.TouchEvent && e instanceof TouchEvent) {
-            clientX = e.touches[0].clientX;
-            clientY = e.touches[0].clientY;
-        } else {
-            clientX = (e as MouseEvent).clientX;
-            clientY = (e as MouseEvent).clientY;
-        }
-
+    function getPos(e: PointerEvent) {
+        const bbox = canvas.getBoundingClientRect();
         return {
-            x: clientX - rect.left,
-            y: clientY - rect.top,
+            x: e.clientX - bbox.left,
+            y: e.clientY - bbox.top,
         };
     }
 
-    function startDrawing(e: MouseEvent | TouchEvent) {
+    function isPointInScrollZone(clientX: number): boolean {
+        if (!scrollZone) return false;
+        const rect = scrollZone.getBoundingClientRect();
+        return clientX >= rect.left;
+    }
+
+    function handleStart(e: PointerEvent) {
         if (!enabled) return;
-        e.preventDefault(); // Prevent scrolling while drawing
-        isDrawing = true;
 
-        const { x, y } = getCoords(e);
-        lastX = x;
-        lastY = y;
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        canvas.setPointerCapture(e.pointerId);
 
-        if (!ctx) ctx = canvas.getContext("2d");
-        if (ctx) {
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            if (tool === "eraser") {
-                ctx.globalCompositeOperation = "destination-out";
-                ctx.lineWidth = 20;
-            } else {
-                ctx.globalCompositeOperation = "source-over";
-                ctx.strokeStyle = strokeColor;
-                ctx.lineWidth = strokeWidth;
+        // Multi-touch scroll detection
+        if (activePointers.size >= 2) {
+            isDrawing = false;
+            points = [];
+            return;
+        }
+
+        startX = e.clientX;
+        startY = e.clientY;
+        startTime = Date.now();
+        isInScrollZone = isPointInScrollZone(e.clientX);
+
+        if (isInScrollZone) {
+            canvas.releasePointerCapture(e.pointerId);
+            return;
+        }
+
+        const { x, y } = getPos(e);
+        points = [{ x, y }];
+    }
+
+    function handleMove(e: PointerEvent) {
+        if (!enabled || !ctx || isInScrollZone) return;
+
+        const prev = activePointers.get(e.pointerId);
+        if (prev) {
+            // Multi-finger scroll logic
+            if (activePointers.size >= 2) {
+                const dx = e.clientX - prev.x;
+                const dy = e.clientY - prev.y;
+                window.scrollBy(-dx * 1.5, -dy * 1.5);
+                activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+                return;
+            }
+        }
+        activePointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+        if (e.buttons !== 1 || activePointers.size >= 2) return;
+
+        const moveDist = Math.hypot(e.clientX - startX, e.clientY - startY);
+
+        if (!isDrawing && moveDist > DRAW_THRESHOLD) {
+            isDrawing = true;
+        }
+
+        if (isDrawing) {
+            const { x, y } = getPos(e);
+            points.push({ x, y });
+
+            if (points.length > 2) {
+                const p1 = points[points.length - 3];
+                const p2 = points[points.length - 2];
+                const p3 = points[points.length - 1];
+
+                const mid1 = { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+                const mid2 = { x: (p2.x + p3.x) / 2, y: (p2.y + p3.y) / 2 };
+
+                ctx.beginPath();
+                ctx.moveTo(mid1.x, mid1.y);
+                ctx.quadraticCurveTo(p2.x, p2.y, mid2.x, mid2.y);
+                ctx.stroke();
             }
         }
     }
 
-    function draw(e: MouseEvent | TouchEvent) {
-        if (!isDrawing || !enabled || !ctx) return;
-        e.preventDefault();
+    function handleEnd(e: PointerEvent) {
+        if (!enabled) return;
 
-        const { x, y } = getCoords(e);
+        activePointers.delete(e.pointerId);
+        canvas.releasePointerCapture(e.pointerId);
 
-        ctx.lineTo(x, y);
-        ctx.stroke();
+        if (isInScrollZone) {
+            isInScrollZone = false;
+            return;
+        }
 
-        lastX = x;
-        lastY = y;
-    }
+        if (activePointers.size > 0) return;
 
-    function stopDrawing() {
+        const duration = Date.now() - startTime;
+        const moveDist = Math.hypot(e.clientX - startX, e.clientY - startY);
+
+        // SMART TAP DETECTION
+        if (duration < TAP_TIMEOUT && moveDist < TAP_DISTANCE) {
+            handleSmartTap(e.clientX, e.clientY);
+        } else if (isDrawing && points.length > 1) {
+            // Final segment
+            const pLast = points[points.length - 1];
+            const pPrev = points[points.length - 2];
+            ctx?.beginPath();
+            ctx?.moveTo(pPrev.x, pPrev.y);
+            ctx?.lineTo(pLast.x, pLast.y);
+            ctx?.stroke();
+        }
+
         isDrawing = false;
-        if (ctx) ctx.closePath();
+        points = [];
+        isInScrollZone = false;
     }
 
-    function clearCanvas() {
+    function handleSmartTap(clientX: number, clientY: number) {
+        // Toggle canvas pointer events to peek
+        const originalPE = canvas.style.pointerEvents;
+        canvas.style.pointerEvents = "none";
+
+        const el = document.elementFromPoint(clientX, clientY);
+
+        canvas.style.pointerEvents = originalPE;
+
+        if (el) {
+            const clickable = el.closest(
+                'button, a, input, label, [role="button"]',
+            );
+            const target = (clickable || el) as HTMLElement;
+
+            // Dispatch full mouse event sequence for maximum compatibility
+            const eventInit: MouseEventInit = {
+                bubbles: true,
+                cancelable: true,
+                view: window,
+                clientX,
+                clientY,
+                screenX: clientX,
+                screenY: clientY,
+            };
+
+            target.dispatchEvent(new MouseEvent("mousedown", eventInit));
+            target.dispatchEvent(new MouseEvent("mouseup", eventInit));
+            target.click();
+
+            // Also pointer events for modern listeners
+            target.dispatchEvent(
+                new PointerEvent("pointerdown", { ...eventInit, pointerId: 1 }),
+            );
+            target.dispatchEvent(
+                new PointerEvent("pointerup", { ...eventInit, pointerId: 1 }),
+            );
+        }
+    }
+
+    export function clear() {
         if (!ctx || !canvas) return;
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.restore();
+    }
+
+    export function save(): string {
+        return canvas ? canvas.toDataURL() : "";
+    }
+
+    export function load(dataUrl: string) {
+        if (!ctx || !canvas) return;
+        clear();
+
+        const img = new Image();
+        img.src = dataUrl;
+        img.onload = () => {
+            const dpr = window.devicePixelRatio || 1;
+            ctx!.drawImage(img, 0, 0, canvas.width / dpr, canvas.height / dpr);
+        };
     }
 </script>
 
-<div
-    class={`absolute inset-0 pointer-events-none z-10 transition-opacity duration-300 ${enabled ? "opacity-100" : "opacity-0"}`}
->
-    <canvas
-        bind:this={canvas}
-        class={`w-full h-full ${enabled ? "pointer-events-auto cursor-crosshair" : ""}`}
-        on:mousedown={startDrawing}
-        on:mousemove={draw}
-        on:mouseup={stopDrawing}
-        on:mouseleave={stopDrawing}
-        on:touchstart={startDrawing}
-        on:touchmove={draw}
-        on:touchend={stopDrawing}
-    ></canvas>
+<canvas
+    bind:this={canvas}
+    class="absolute inset-0 z-20 touch-none"
+    style:pointer-events={enabled ? "auto" : "none"}
+    style:cursor={enabled ? "crosshair" : "auto"}
+    on:pointerdown={handleStart}
+    on:pointermove={handleMove}
+    on:pointerup={handleEnd}
+    on:pointercancel={handleEnd}
+></canvas>
 
-    <!-- Floating Toolbar -->
-    {#if enabled}
-        <div
-            class="absolute top-4 right-4 flex flex-col gap-2 bg-white/90 backdrop-blur p-2 rounded-xl shadow-lg border border-slate-200 pointer-events-auto"
-            transition:fly={{ x: 20, duration: 300 }}
-        >
-            <button
-                on:click={() => (tool = "pen")}
-                class={`p-2 rounded-lg transition ${tool === "pen" ? "bg-red-100 text-red-600" : "text-slate-400 hover:bg-slate-50"}`}
-            >
-                <PenTool size={20} />
-            </button>
-            <button
-                on:click={() => (tool = "eraser")}
-                class={`p-2 rounded-lg transition ${tool === "eraser" ? "bg-slate-200 text-slate-700" : "text-slate-400 hover:bg-slate-50"}`}
-            >
-                <Eraser size={20} />
-            </button>
-            <button
-                on:click={clearCanvas}
-                class="p-2 rounded-lg text-slate-400 hover:text-red-500 hover:bg-red-50 transition"
-            >
-                <Trash2 size={20} />
-            </button>
-            <div class="w-full h-[1px] bg-slate-200 my-1"></div>
-            <button
-                on:click={() => (enabled = false)}
-                class="p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition"
-            >
-                <X size={20} />
-            </button>
+{#if enabled}
+    <div
+        bind:this={scrollZone}
+        class="absolute right-0 top-0 bottom-0 w-12 z-30 touch-pan-y flex flex-col justify-center items-center opacity-30 hover:opacity-80 transition-opacity bg-slate-900/10 backdrop-blur-[1px] border-l border-slate-900/5"
+    >
+        <div class="space-y-1">
+            <div class="w-1 h-8 bg-slate-400 rounded-full mx-auto"></div>
+            <div class="w-1 h-8 bg-slate-400 rounded-full mx-auto"></div>
+            <div class="w-1 h-8 bg-slate-400 rounded-full mx-auto"></div>
         </div>
-    {/if}
-</div>
-
-<style>
-    /* Ensure canvas sits correctly */
-    canvas {
-        touch-action: none;
-    }
-</style>
+    </div>
+{/if}

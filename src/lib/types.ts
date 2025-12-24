@@ -51,6 +51,13 @@ export interface Question {
         examName?: string; // e.g. "제1회 변호사시험"
         examYear?: string; // e.g. "2012"
     };
+
+    // Augmented by examDataService (alternative source info pattern)
+    exam_title?: string;    // e.g. "제1회 변호사시험"
+    exam_year?: string;     // e.g. "2012"
+    exam_round?: string;
+    exam_type?: 'official' | 'mock';
+    subject_category?: string;
 }
 
 export interface ExamData {
@@ -105,7 +112,27 @@ export interface WrongNote extends Question {
     lastReviewDate?: number;
     isGraduated?: boolean;
     memo?: string;
+    // Convenience fields for filtering (also available via examInfo)
+    exam_name?: string;      // e.g., "제1회 변호사시험"
+    year?: string;           // e.g., "2012"
+    subject?: string;        // e.g., "민사법" (category-level)
+    question_text?: string;  // Display text (same as question)
+    question_number?: number;// Display number (same as id)
+    choices?: string[];      // Display options (same as options)
+    tag_ids?: string[];      // Same as subjects for compatibility
 }
+
+// ============ 문제별 메모 및 통계 ============
+
+export interface QuestionMemo {
+    memo: string;
+    wrongCount: number;
+    lastWrongDate?: number;
+    isGraduated?: boolean;
+    consecutiveCorrect: number;
+}
+
+export type QuestionMemos = Record<number, QuestionMemo>; // key: questionId
 
 // ============ 게이미피케이션 ============
 

@@ -1,5 +1,11 @@
 <script lang="ts">
-    import { wrongNotes } from "$lib/stores";
+    import {
+        wrongNotes,
+        quizSession,
+        quizHistory,
+        questionMemos,
+    } from "$lib/stores";
+    import { isCorrectAnswer } from "$lib/logic/quizEngine";
     import { getCodePath } from "$lib/db";
     import { goto } from "$app/navigation";
     import { onMount } from "svelte";
@@ -11,19 +17,61 @@
         BookOpen,
         Sparkles,
         Award,
+        Zap,
+        Filter,
     } from "lucide-svelte";
     import type { WrongNote } from "$lib/types";
+    import { getQuickReviewQuestions } from "$lib/logic/quickReview";
 
     let subjectPaths: Record<string, string> = {};
     let expandedQuestions: Set<number> = new Set();
     let filter: "active" | "graduated" = "active";
 
+    // New filters
+    let subjectFilter: string = "all"; // 'all' | '공법' | '민사법' | '형사법'
+    const subjects = ["공법", "민사법", "형사법"];
+
     onMount(() => {
+        migrateExistingNotes();
         loadSubjectPaths();
     });
 
+    /**
+     * One-time migration: Move standalone wrongNotes data to centralization
+     */
+    function migrateExistingNotes() {
+        if ($wrongNotes.length > 0) {
+            console.log(
+                "Migrating existing wrong notes to centralized memos...",
+            );
+            const memos = { ...$questionMemos };
+            let updated = false;
+
+            $wrongNotes.forEach((note) => {
+                if (!memos[note.id]) {
+                    memos[note.id] = {
+                        memo: note.memo || "",
+                        wrongCount: note.wrongCount || 1,
+                        lastWrongDate: note.lastWrongDate || Date.now(),
+                        consecutiveCorrect: note.consecutiveCorrect || 0,
+                        isGraduated: note.isGraduated || false,
+                    };
+                    updated = true;
+                }
+            });
+
+            if (updated) {
+                $questionMemos = memos;
+            }
+            // We keep $wrongNotes for now but logically we will favor logs.
+            // In a future update, we could empty $wrongNotes.
+        }
+    }
+
     async function loadSubjectPaths() {
-        for (const q of $wrongNotes) {
+        // Use all unique questions from history/memos to load paths
+        const allRelevantQuestions = allWrongNotesFromLogs;
+        for (const q of allRelevantQuestions) {
             for (const code of q.subjects) {
                 if (!subjectPaths[code]) {
                     subjectPaths[code] = await getCodePath(code);
@@ -41,64 +89,211 @@
     }
 
     function markAsGraduated(note: WrongNote) {
-        const idx = $wrongNotes.findIndex((n) => n.id === note.id);
-        if (idx !== -1) {
-            $wrongNotes[idx].isGraduated = true;
-            $wrongNotes[idx].consecutiveCorrect = 3;
-            $wrongNotes = $wrongNotes;
+        if ($questionMemos[note.id]) {
+            $questionMemos[note.id].isGraduated = true;
+            $questionMemos[note.id].consecutiveCorrect = 3;
+            $questionMemos = $questionMemos;
         }
     }
 
     function restoreNote(note: WrongNote) {
-        const idx = $wrongNotes.findIndex((n) => n.id === note.id);
-        if (idx !== -1) {
-            $wrongNotes[idx].isGraduated = false;
-            $wrongNotes[idx].consecutiveCorrect = 0;
-            $wrongNotes = $wrongNotes;
+        if ($questionMemos[note.id]) {
+            $questionMemos[note.id].isGraduated = false;
+            $questionMemos[note.id].consecutiveCorrect = 0;
+            $questionMemos = $questionMemos;
         }
     }
 
     function removeNote(note: WrongNote) {
-        if (confirm("Delete this note?")) {
-            $wrongNotes = $wrongNotes.filter((n) => n.id !== note.id);
+        if (
+            confirm(
+                "정말 이 오답 기록을 삭제하시겠습니까?\n(해당 시험 로그가 삭제되면 자동으로 사라집니다)",
+            )
+        ) {
+            // Log-based recommendation usually means deleting the log,
+            // but we can "hide" it by marking as graduated or removing from memos if desired.
+            // For now, let's allow removing from memos which effectively resets stats.
+            if ($questionMemos[note.id]) {
+                delete $questionMemos[note.id];
+                $questionMemos = $questionMemos;
+            }
         }
     }
 
     let sortMode: "recent_added" | "oldest_review" = "oldest_review";
 
-    $: filteredNotes = $wrongNotes
+    /**
+     * Derive wrong notes from quizHistory
+     */
+    $: allWrongNotesFromLogs = (() => {
+        const notesMap = new Map<number, WrongNote>();
+
+        // 1. Process logs in chronological order (older first, so newer overwrites)
+        [...$quizHistory]
+            .sort((a, b) => a.timestamp - b.timestamp)
+            .forEach((record) => {
+                record.questions.forEach((q, idx) => {
+                    const userAnswer = record.answers[idx];
+                    if (
+                        userAnswer !== undefined &&
+                        !isCorrectAnswer(q, userAnswer)
+                    ) {
+                        const memoInfo = $questionMemos[q.id];
+                        const note: WrongNote = {
+                            ...q,
+                            timestamp: record.timestamp,
+                            wrongCount: memoInfo?.wrongCount || 1,
+                            consecutiveCorrect:
+                                memoInfo?.consecutiveCorrect || 0,
+                            lastWrongDate:
+                                memoInfo?.lastWrongDate || record.timestamp,
+                            isGraduated: memoInfo?.isGraduated || false,
+                            memo: memoInfo?.memo || "",
+                            // Use latest available info
+                            exam_name:
+                                q.examInfo?.examName ||
+                                q.exam_title ||
+                                record.round,
+                            year: q.examInfo?.examYear || q.exam_year || "",
+                            subject:
+                                q.examInfo?.category ||
+                                q.subject_category ||
+                                record.category,
+                        };
+                        notesMap.set(q.id, note);
+                    }
+                });
+            });
+
+        return Array.from(notesMap.values());
+    })();
+
+    // Enhanced filtering with subject filter
+    $: filteredNotes = allWrongNotesFromLogs
         .filter((n) => (filter === "active" ? !n.isGraduated : n.isGraduated))
+        .filter((n) => {
+            if (subjectFilter === "all") return true;
+            return (
+                n.examInfo?.category === subjectFilter ||
+                n.subject === subjectFilter
+            );
+        })
         .sort((a, b) => {
             if (sortMode === "oldest_review") {
-                // Treat undefined lastReviewDate as 0 (very old)
                 const dateA = a.lastReviewDate || 0;
                 const dateB = b.lastReviewDate || 0;
                 return dateA - dateB;
             } else {
-                // recent_added: Newest ID (timestamp) first
-                return b.id - a.id;
+                return b.timestamp - a.timestamp;
             }
         });
 
-    $: activeCount = $wrongNotes.filter((n) => !n.isGraduated).length;
-    $: graduatedCount = $wrongNotes.filter((n) => n.isGraduated).length;
+    $: activeCount = allWrongNotesFromLogs.filter((n) => !n.isGraduated).length;
+    $: graduatedCount = allWrongNotesFromLogs.filter(
+        (n) => n.isGraduated,
+    ).length;
+
+    // Dynamic header based on filter
+    $: headerTitle =
+        subjectFilter === "all" ? "오답노트" : `오답노트 - ${subjectFilter}`;
+
+    // Get unique exam names for display
+    $: examNames = [
+        ...new Set(
+            filteredNotes
+                .map(
+                    (n) =>
+                        n.examInfo?.examName ||
+                        n.exam_name ||
+                        n.examInfo?.round,
+                )
+                .filter(Boolean),
+        ),
+    ];
+
+    // Quick Review function
+    function startQuickReview() {
+        const reviewQuestions = getQuickReviewQuestions(allWrongNotesFromLogs, {
+            subjectFilter: subjectFilter,
+            count: 5,
+        });
+
+        if (reviewQuestions.length === 0) {
+            alert("복습할 문제가 없습니다.");
+            return;
+        }
+
+        // Set quiz session with review questions
+        $quizSession = {
+            config: {
+                category: subjectFilter === "all" ? "MIXED" : subjectFilter,
+                round: "REVIEW",
+            },
+            questions: reviewQuestions,
+            isReview: true, // Flag for review mode
+        };
+
+        goto("/quiz");
+    }
 </script>
 
 <div class="min-h-screen p-6 pb-32 space-y-6">
     <!-- Header -->
     <header class="retro-window">
         <div class="retro-header !bg-[#FF6666]">
-            <span>📚 REVIEW_NOTES.db</span>
+            <span>📚 {headerTitle}</span>
         </div>
         <div class="p-4 text-center bg-[#FFF0F0]">
             <h1 class="text-2xl font-pixel text-[#FF6666] animate-pulse">
-                REVIEW MISTAKES
+                {headerTitle}
             </h1>
-            <p class="text-xs font-bold text-gray-500 mt-1">
-                Turn your weakness into strength
-            </p>
+            {#if examNames.length > 0}
+                <p class="text-xs font-bold text-gray-500 mt-1">
+                    {examNames.slice(0, 3).join(", ")}{examNames.length > 3
+                        ? ` 외 ${examNames.length - 3}개`
+                        : ""}
+                </p>
+            {:else}
+                <p class="text-xs font-bold text-gray-500 mt-1">
+                    Turn your weakness into strength
+                </p>
+            {/if}
         </div>
     </header>
+
+    <!-- Quick Review Button -->
+    <button
+        class="w-full btn-retro btn-retro-pink py-4 text-lg font-bold flex items-center justify-center gap-3 shadow-lg hover:scale-[1.02] transition-transform"
+        on:click={startQuickReview}
+        disabled={activeCount === 0}
+    >
+        <Zap size={24} />
+        빠른 복습 (5문제)
+    </button>
+
+    <!-- Subject Filter -->
+    <div class="flex gap-2 overflow-x-auto pb-2">
+        <button
+            class="shrink-0 btn-retro text-xs px-4 py-2 flex items-center gap-1
+                   {subjectFilter === 'all'
+                ? 'bg-[#333] text-white'
+                : 'bg-white text-gray-600'}"
+            on:click={() => (subjectFilter = "all")}
+        >
+            <Filter size={12} /> 전체
+        </button>
+        {#each subjects as subj}
+            <button
+                class="shrink-0 btn-retro text-xs px-4 py-2
+                       {subjectFilter === subj
+                    ? 'bg-[#FF6666] text-white'
+                    : 'bg-white text-gray-600'}"
+                on:click={() => (subjectFilter = subj)}
+            >
+                {subj}
+            </button>
+        {/each}
+    </div>
 
     <!-- Toolbar: Sort & Filter -->
     <div class="flex flex-col gap-2">
@@ -164,17 +359,31 @@
                             <p class="font-bold text-xs truncate leading-tight">
                                 {note.question}
                             </p>
-                            <div class="flex gap-2 mt-1">
-                                <span class="pixel-tag bg-gray-100 text-[9px]"
-                                    >{note.examInfo?.examName ||
-                                        note.examInfo?.round ||
-                                        "Unknown"}</span
+                            <div class="flex flex-wrap gap-2 mt-1">
+                                <span class="pixel-tag bg-gray-100 text-[9px]">
+                                    {#if note.examInfo?.examName}
+                                        {note.examInfo.examName}
+                                        {note.examInfo.examYear
+                                            ? `(${note.examInfo.examYear})`
+                                            : ""}
+                                    {:else if note.exam_name}
+                                        {note.exam_name}
+                                        {note.year ? `(${note.year})` : ""}
+                                    {:else}
+                                        {note.examInfo?.round || "Unknown"}
+                                    {/if}
+                                </span>
+                                <span
+                                    class="pixel-tag bg-blue-50 text-blue-600 text-[9px]"
                                 >
+                                    📌 {note.id}번
+                                </span>
                                 {#if !note.isGraduated}
                                     <span
                                         class="pixel-tag !bg-[#FF6666] !text-white text-[9px]"
-                                        >Wrong x{note.wrongCount}</span
                                     >
+                                        Wrong x{note.wrongCount}
+                                    </span>
                                 {/if}
                             </div>
                         </div>
