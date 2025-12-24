@@ -305,25 +305,6 @@
         </div>
     </header>
 
-    <!-- 1. Category Tabs -->
-    <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-        {#each Object.keys(CATEGORY_MAP) as cat}
-            <button
-                class="flex-1 min-w-[80px] btn-retro transition-all
-                       {$quizConfig.category === cat
-                    ? 'bg-[#FF66CC] text-white translate-y-1'
-                    : 'bg-white text-gray-500 hover:bg-gray-50'}"
-                on:click={() => {
-                    $quizConfig.category = cat;
-                    $quizConfig.selectedSubjects = []; // Reset sub-filters
-                    $quizConfig.selectedCodes = [];
-                }}
-            >
-                {cat}
-            </button>
-        {/each}
-    </div>
-
     <!-- 2. Quick Start Card -->
     <div class="retro-window bg-[#E0F7FA] border-2 border-black">
         <div class="p-6 flex items-center justify-between">
@@ -357,6 +338,30 @@
         </div>
 
         <div class="p-6 space-y-8">
+            <!-- 1. Category Tabs (Relocated) -->
+            <div class="space-y-2">
+                <h2 class="font-bold text-sm flex items-center gap-2">
+                    <FolderTree size={16} /> CATEGORY
+                </h2>
+                <div class="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    {#each Object.keys(CATEGORY_MAP) as cat}
+                        <button
+                            class="flex-1 min-w-[80px] btn-retro transition-all
+                                {$quizConfig.category === cat
+                                ? 'bg-[#FF66CC] text-white translate-y-1'
+                                : 'bg-white text-gray-500 hover:bg-gray-50'}"
+                            on:click={() => {
+                                $quizConfig.category = cat;
+                                $quizConfig.selectedSubjects = []; // Reset sub-filters
+                                $quizConfig.selectedCodes = [];
+                            }}
+                        >
+                            {cat}
+                        </button>
+                    {/each}
+                </div>
+            </div>
+
             <!-- Year Range Slider -->
             <div class="space-y-4">
                 <div class="flex justify-between items-center">
